@@ -1,0 +1,57 @@
+name: Bug report
+description: Report something that isn't working as documented.
+labels: ["bug", "triage"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Notes
+        - Calendar
+        - Tasks
+        - Teams / Groups / Roles
+        - Audit / Users / Admin
+        - Auth / Login
+        - Self-hosting / Docker
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What actually happened? Paste error output, screenshots, etc.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tessera version
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: input
+    id: deploy
+    attributes:
+      label: Deployment
+      placeholder: "Self-hosted via docker compose / Vercel / local dev"
+    validations:
+      required: false

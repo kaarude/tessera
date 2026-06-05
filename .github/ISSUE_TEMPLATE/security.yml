@@ -1,0 +1,28 @@
+name: Security report
+description: Report a security issue. Sensitive issues should NOT be filed here — email security@tessera.app instead. This template is for low-severity / hardening reports.
+labels: ["security", "triage"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: |
+        What is the issue? Be specific. If this is sensitive (RCE,
+        data leak, auth bypass) email security@tessera.app instead
+        of opening a public issue.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      placeholder: What can an attacker do?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction
+      placeholder: Steps to reproduce, if applicable.
+    validations:
+      required: false

@@ -1,0 +1,106 @@
+# Tessera self-hosting stack.
+#
+# Usage:
+#   openssl rand -base64 48 > .session_secret
+#   cp .env.example .env  (then edit any values you want to override)
+#   docker compose up -d
+#
+# The app will be available on http://localhost:3000.
+# Default login: admin@tessera.app / admin123  (change immediately!)
+
+name: tessera
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: tessera-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tessera}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tessera}
+      POSTGRES_DB: ${POSTGRES_DB:-tessera}
+    volumes:
+      - tessera-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tessera}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tessera-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: tessera-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minio12345}
+    volumes:
+      - tessera-minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tessera-net
+
+  minio-bucket-init:
+    # One-shot job that creates the bucket on first boot. Uses the MinIO
+    # client (`mc`) shipped with the server image.
+    image: minio/mc:latest
+    container_name: tessera-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 '${S3_ACCESS_KEY_ID:-minio}' '${S3_SECRET_ACCESS_KEY:-minio12345}' &&
+      mc mb --ignore-existing local/${S3_BUCKET:-tessera} &&
+      echo 'MinIO bucket ${S3_BUCKET:-tessera} ready'
+      "
+    networks:
+      - tessera-net
+    restart: "no"
+
+  app:
+    # Build from the local Dockerfile. For a pre-built image, replace
+    # `build:` with `image: ghcr.io/kaarude/tessera:latest`.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tessera-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tessera}:${POSTGRES_PASSWORD:-tessera}@db:5432/${POSTGRES_DB:-tessera}?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set — generate with `openssl rand -base64 48`}
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minio}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minio12345}
+      S3_BUCKET: ${S3_BUCKET:-tessera}
+      S3_FORCE_PATH_STYLE: "true"
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      AUTO_SEED: ${AUTO_SEED:-1}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    networks:
+      - tessera-net
+
+networks:
+  tessera-net:
+    driver: bridge
+
+volumes:
+  tessera-db-data:
+  tessera-minio-data:

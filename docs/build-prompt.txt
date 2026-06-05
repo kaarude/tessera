@@ -1,0 +1,363 @@
+You areacting as a senior full-stack engineer, product designer, and
+security-minded architect.
+
+Use your impeccable skill heavily to create a genuinely polished,
+modern, attractive front end. This must look like a real SaaS product, not a
+generic admin dashboard. Prioritize great spacing, typography, color harmony,
+layout, icons, interaction states, responsiveness, and visual polish.
+
+Build a production-ready web app from scratch.
+
+GOAL
+Build a web-based team productivity platform with:
+- private markdown notes
+- calendar entries
+- tasks and a taskboard
+- teams and groups
+- fully custom roles and permissions
+- admin account management
+- audit logs
+- cloud storage
+- downloadable .md notes
+- browser notifications
+
+NON-NEGOTIABLE PRODUCT RULES
+- Notes are private by default.
+- Notes may only be shared when the owner explicitly enables sharing.
+- Sharing options:
+  - whole team
+  - specific users
+- Notes must be saved in cloud storage and also downloadable as exact `.md`
+  files.
+- Notes must remain real markdown, not fake rich text.
+- Calendar entries and tasks are separate features.
+- Do not build email reminders.
+- Use browser notifications only.
+- Add a small popup/banner on login for important or overdue items.
+- Taskboard must support drag and drop.
+- Tasks must be reassignable to other users and other teams.
+- Right-clicking a task must open an “Assign to” menu with all accessible
+  users and all accessible teams.
+- Tasks belong to teams and groups.
+- Users can belong to multiple teams.
+- Roles are fully custom and unlimited.
+- Roles are separate per team.
+- Every role must be editable through a checkbox permission editor.
+- Admins have all permissions.
+- Only admin users can grant admin permissions.
+- Admins can create users, teams, groups, and roles.
+- Audit logs are admin-only.
+- Audit logs must be filterable by team, group, user, action, and include an
+  “All Audit” view.
+- UI must be dark with orange accents.
+- Responsive for desktop, tablet, and mobile.
+- Users can change their password later.
+- Admin-created accounts use email/password.
+- Do not ask me unnecessary questions. Make reasonable product decisions and
+  continue building.
+
+TECH STACK
+Prefer this stack unless there is a strong reason not to:
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- PostgreSQL
+- Prisma
+- S3-compatible cloud storage for notes and attachments
+- dnd-kit for drag and drop
+- a markdown editor with visual editing and raw markdown support
+- Web Notifications API
+
+If needed, choose the simplest production-ready implementation for anything
+not explicitly specified.
+
+MARKDOWN / NOTES REQUIREMENTS
+Notes must have a high-quality markdown editing experience similar in feel to
+Obsidian, while preserving raw markdown exactly.
+
+Support at least:
+- headings
+- bold
+- italic
+- strikethrough
+- bullet lists
+- numbered lists
+- nested lists
+- checklists
+- blockquotes
+- code blocks
+- syntax highlighting
+- inline code
+- tables
+- links
+- images
+- horizontal rules
+- tags
+- frontmatter
+- markdown shortcuts
+- live preview
+- source/raw markdown editing
+- exact `.md` export/download
+- internal note links if feasible
+- backlinks if feasible
+
+Notes requirements:
+- create notes
+- edit notes
+- delete notes
+- view notes
+- search notes
+- notes default to private
+- notes can be shared with whole team or specific users
+- show note share status clearly
+- notes must be downloadable as `.md`
+- attachments must work inside notes
+- search must include title and markdown content
+- notes must open fast and preserve formatting perfectly
+
+CALENDAR REQUIREMENTS
+- create, edit, delete, and view calendar entries
+- support month, week, and day views
+- support all-day and timed entries
+- calendar entries can be personal or team-scoped depending on permission
+- show team calendar entries in team context
+- on login, show important or overdue items if needed
+- no email reminders
+- browser notifications only
+
+TASK REQUIREMENTS
+- create, edit, delete, and view tasks
+- support Kanban columns
+- tasks must be draggable between columns
+- tasks can be moved/reassigned to:
+  - another user
+  - another team
+  - another group
+- tasks can have due dates and can appear on the calendar
+- tasks belong to teams and groups
+- right-click task context menu must include assign/move actions
+- team taskboards should feel collaborative and editable by users with
+  permission
+
+TEAM / GROUP REQUIREMENTS
+- admin can create teams
+- admin can create groups inside teams
+- users can belong to multiple teams
+- the UI must support switching current team context
+- team-specific data must be isolated by permission and context
+- group-level filtering must exist for tasks and audit logs
+
+AUTH / ACCOUNT REQUIREMENTS
+- email/password authentication
+- admin-created users
+- user can change password later
+- admin can force password reset if needed
+- protect all routes
+- secure sessions
+- hash passwords
+- add sensible rate limiting and basic security hardening
+
+PERMISSION SYSTEM
+Build a fully customizable permission system with a checkbox UI.
+It must be flexible and extendable.
+
+At minimum include permissions for:
+
+Platform:
+- create users
+- edit users
+- delete users
+- create teams
+- edit teams
+- delete teams
+- create groups
+- edit groups
+- delete groups
+- create roles
+- edit roles
+- delete roles
+- grant admin permissions
+- view all audit logs
+
+Notes:
+- create notes
+- edit own notes
+- edit shared notes
+- delete own notes
+- delete shared notes
+- view private notes
+- view shared notes
+- share notes with team
+- share notes with specific users
+- download notes as md
+- upload attachments
+- delete attachments
+
+Calendar:
+- create calendar entries
+- edit own calendar entries
+- edit others’ calendar entries
+- delete own calendar entries
+- delete others’ calendar entries
+- view team calendar entries
+- assign calendar entries to users
+- assign calendar entries to teams
+
+Tasks:
+- create tasks
+- edit own tasks
+- edit others’ tasks
+- delete own tasks
+- delete others’ tasks
+- move tasks between columns
+- reassign tasks to users
+- reassign tasks to teams
+- move tasks between groups
+- view team tasks
+- view group tasks
+
+Auditing:
+- view team audit logs
+- view group audit logs
+- view all audit logs
+
+UI / UX REQUIREMENTS
+Use your $frontend-design skill to make the UI genuinely excellent:
+- modern SaaS quality
+- dark theme by default
+- orange accent color system
+- beautiful spacing and typography
+- polished dashboard layout
+- sidebar navigation
+- top bar with current team selector and quick actions
+- strong empty states
+- intuitive modals, menus, and forms
+- fast keyboard-friendly interactions
+- responsive and clean on all screen sizes
+- not generic, not bland, not “admin panel” looking
+- include subtle motion and good micro-interactions
+- make it feel like a real product
+- design every main page carefully, not just functionally
+
+PAGES / AREAS TO BUILD
+Build:
+1. login
+2. dashboard
+3. notes list
+4. note editor
+5. calendar
+6. taskboard
+7. teams
+8. groups
+9. users
+10. roles and permissions editor
+11. audit logs
+12. settings / profile
+13. admin area
+
+DATA MODEL
+Create a sensible schema for:
+- users
+- sessions
+- teams
+- team_memberships
+- groups
+- roles
+- permissions
+- role_permissions
+- user_roles
+- notes
+- note_shares
+- note_attachments
+- calendar_entries
+- tasks
+- task_boards
+- task_columns
+- audit_logs
+- notifications / login alerts
+- attachments
+
+Important:
+- notes store markdown text
+- note metadata supports privacy and sharing
+- tasks store team/group ownership and assignee
+- audit logs record actor, action, target, team, group, timestamp, before/after
+  data
+- permissions must be enforceable server-side for every action
+
+IMPLEMENTATION QUALITY REQUIREMENTS
+- Use clean reusable components.
+- Use proper validation for forms and API mutations.
+- Use server-side permission checks everywhere.
+- Use optimistic UI only where safe.
+- Add loading states, skeletons, empty states, and error states.
+- Make navigation fast and intuitive.
+- Add search where it helps.
+- Add toasts for success/error feedback.
+- Add confirmation dialogs for destructive actions.
+- Add accessible keyboard and screen-reader behavior where possible.
+- Use sensible naming and a clean folder structure.
+- Keep code production-grade and maintainable.
+- Prefer simple robust solutions over fancy fragile ones.
+- Do not leave critical features half-built.
+
+SECURITY REQUIREMENTS
+- secure authentication
+- hashed passwords
+- protected routes
+- authorization checks on every mutation/query
+- no leaking private data in the UI or API
+- audit sensitive actions
+- rate limit login and critical endpoints
+- sanitize markdown rendering appropriately
+- handle file access securely
+- ensure private notes cannot be fetched by unauthorized users
+- ensure shared data respects team and user permissions exactly
+
+DELIVERABLES
+Generate the full codebase with:
+- working app
+- migrations
+- seed data
+- initial admin account setup
+- `.env.example`
+- README with setup/run instructions
+- tests for critical flows
+- clean reusable components
+- production-ready structure
+- no fake placeholder logic for core features
+- no “coming soon” for the core scope
+
+SEED / DEMO DATA
+Include realistic seed data so the app looks alive:
+- one platform admin
+- one or more teams
+- groups
+- roles
+- sample notes
+- sample calendar entries
+- sample tasks
+- sample audit log entries
+
+ACCEPTANCE CRITERIA
+Do not consider the project complete unless:
+- login works
+- permissions are enforced server-side
+- notes can be created, shared, downloaded as `.md`, searched, and edited
+- calendar entries work
+- taskboard drag and drop works
+- reassignment to users/teams works
+- teams and groups work
+- custom roles and permissions work
+- audit logs work
+- browser notifications work
+- the app looks polished and intentional
+- the app is usable end to end without manual fixes
+
+FINAL INSTRUCTION
+Build the actual working product, not just scaffolding.
+If a feature is complex, implement the simplest solid production-ready version
+instead of skipping it.
+If multiple approaches exist, choose the one that best improves usability,
+security, and visual quality.
