@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 export function useKeyboardShortcuts(shortcuts: Record<string, (e: KeyboardEvent) => void>) {
   useEffect(() => {

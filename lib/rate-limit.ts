@@ -17,23 +17,37 @@ export async function checkRateLimit(
   const uniqKeys = Array.from(new Set(keys.filter(Boolean)));
 
   for (const key of uniqKeys) {
-    const record = await prisma.loginAttempt.findUnique({ where: { key } });
-    if (!record || record.resetAt.getTime() <= now) {
-      // window has expired or first time — reset
-      await prisma.loginAttempt.upsert({
-        where: { key },
-        create: { key, count: 1, resetAt: new Date(now + windowMs) },
-        update: { count: 1, resetAt: new Date(now + windowMs) },
-      });
-      continue;
+    const resetAt = new Date(now + windowMs);
+    const [record] = await prisma.$queryRaw<
+      { count: number; resetAt: Date }[]
+    >`
+      INSERT INTO "LoginAttempt" ("id", "key", "count", "resetAt", "createdAt", "updatedAt")
+      VALUES (
+        concat('rl_', md5(${key})),
+        ${key},
+        1,
+        ${resetAt},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT ("key") DO UPDATE SET
+        "count" = CASE
+          WHEN "LoginAttempt"."resetAt" <= NOW() THEN 1
+          ELSE "LoginAttempt"."count" + 1
+        END,
+        "resetAt" = CASE
+          WHEN "LoginAttempt"."resetAt" <= NOW() THEN ${resetAt}
+          ELSE "LoginAttempt"."resetAt"
+        END,
+        "updatedAt" = NOW()
+      RETURNING "count", "resetAt"
+    `;
+    if (record.count > max) {
+      return {
+        allowed: false,
+        retryAfterMs: Math.max(0, record.resetAt.getTime() - now),
+      };
     }
-    if (record.count >= max) {
-      return { allowed: false, retryAfterMs: record.resetAt.getTime() - now };
-    }
-    await prisma.loginAttempt.update({
-      where: { key },
-      data: { count: { increment: 1 } },
-    });
   }
   return { allowed: true, retryAfterMs: 0 };
 }

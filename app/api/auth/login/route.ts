@@ -13,6 +13,7 @@ const Body = z
   .strict();
 
 function getClientIp(request: Request): string {
+  if (process.env.TRUST_PROXY !== "1") return "";
   // Trust the first entry in x-forwarded-for. On Vercel/Cloudflare/Railway
   // the platform sets this. If you proxy through a custom chain, harden
   // the index accordingly.
@@ -23,7 +24,7 @@ function getClientIp(request: Request): string {
   }
   const real = request.headers.get("x-real-ip");
   if (real) return real.trim();
-  return "unknown";
+  return "";
 }
 
 export async function POST(request: Request) {
@@ -84,6 +85,8 @@ export async function POST(request: Request) {
     session.email = user.email;
     session.name = user.name;
     session.isAdmin = user.isAdmin;
+    session.sessionVersion = user.sessionVersion;
+    session.passwordChangeOnly = user.mustChangePassword;
     await session.save();
 
     await logAudit({

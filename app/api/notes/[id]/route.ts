@@ -4,6 +4,7 @@ import { requireAuth, withRoute, mapError, logAudit } from "@/lib/route";
 import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
 import { NoteUpdateBody } from "@/lib/schemas";
+import { canReadNote } from "@/lib/access";
 
 const CUID = /^c[a-z0-9]{20,}$/;
 
@@ -34,13 +35,7 @@ export async function GET(
     if (!note) return apiError(404, "Not found");
 
     const teamIds = user.memberships.map((m) => m.teamId);
-    const canAccess =
-      note.ownerId === user.id ||
-      !note.isPrivate ||
-      note.shares.some(
-        (s) =>
-          s.userId === user.id || (s.teamId && teamIds.includes(s.teamId)),
-      );
+    const canAccess = canReadNote(note, user.id, teamIds);
     if (!canAccess) return apiError(403, "Forbidden");
 
     return NextResponse.json(note);
@@ -64,6 +59,12 @@ export const PATCH = withRoute<{ id: string }>(
     if (!existing) return apiError(404, "Not found");
 
     const isOwner = existing.ownerId === user.id;
+    const ownPermission = isOwner
+      ? await hasPermission(user.id, "notes:edit_own", existing.teamId ?? undefined)
+      : false;
+    if (isOwner && !ownPermission && !user.isAdmin) {
+      return apiError(403, "Forbidden: notes:edit_own required");
+    }
     if (!isOwner && !user.isAdmin) {
       const canEditShared = await hasPermission(
         user.id,
@@ -81,6 +82,22 @@ export const PATCH = withRoute<{ id: string }>(
       });
       if (!canEditShared || !hasShare) {
         return apiError(403, "Forbidden");
+      }
+    }
+
+    const targetTeamId =
+      data.teamId === undefined ? existing.teamId : data.teamId;
+    if (
+      targetTeamId &&
+      !user.memberships.some((membership) => membership.teamId === targetTeamId) &&
+      !user.isAdmin
+    ) {
+      return apiError(403, "Not a member of the target team");
+    }
+    if (data.groupId) {
+      const group = await prisma.group.findUnique({ where: { id: data.groupId } });
+      if (!group || group.teamId !== targetTeamId) {
+        return apiError(400, "group/team mismatch");
       }
     }
 
@@ -119,8 +136,13 @@ export const DELETE = withRoute<{ id: string }>(
     if (!existing) return apiError(404, "Not found");
 
     const isOwner = existing.ownerId === user.id;
-    if (!isOwner && !user.isAdmin) {
-      return apiError(403, "Only the owner or an admin can delete a note");
+    const permission = await hasPermission(
+      user.id,
+      isOwner ? "notes:delete_own" : "notes:delete_shared",
+      existing.teamId ?? undefined,
+    );
+    if (!permission && !user.isAdmin) {
+      return apiError(403, "Forbidden");
     }
 
     await prisma.note.delete({ where: { id } });

@@ -32,6 +32,12 @@ export async function GET(request: Request) {
         return apiError(403, "Not a member of that team");
       }
       where.teamId = teamId;
+      if (
+        !user.isAdmin &&
+        !(await hasPermission(user.id, "tasks:view_team", teamId))
+      ) {
+        return apiError(403, "Forbidden: tasks:view_team required");
+      }
     } else {
       where.OR = [
         { assigneeId: user.id },
@@ -40,6 +46,13 @@ export async function GET(request: Request) {
       ];
     }
     if (groupId) where.groupId = groupId;
+    if (
+      groupId &&
+      !user.isAdmin &&
+      !(await hasPermission(user.id, "tasks:view_group", teamId))
+    ) {
+      return apiError(403, "Forbidden: tasks:view_group required");
+    }
     if (boardId) where.boardId = boardId;
 
     const tasks = await prisma.task.findMany({
@@ -93,6 +106,18 @@ export const POST = withRoute(
     });
     if (!column || column.board.id !== boardId || column.board.teamId !== teamId) {
       return apiError(400, "column/board/team mismatch");
+    }
+    if (groupId) {
+      const group = await prisma.group.findUnique({ where: { id: groupId } });
+      if (!group || group.teamId !== teamId) {
+        return apiError(400, "group/team mismatch");
+      }
+    }
+    if (assigneeId) {
+      const membership = await prisma.teamMembership.findUnique({
+        where: { userId_teamId: { userId: assigneeId, teamId } },
+      });
+      if (!membership) return apiError(400, "assignee is not a team member");
     }
 
     const task = await prisma.task.create({

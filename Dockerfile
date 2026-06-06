@@ -82,7 +82,7 @@ USER tessera
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl -fsS http://localhost:3000/api/auth/me || exit 1
+  CMD curl -fsS http://localhost:3000/api/health || exit 1
 
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]
 CMD ["npm", "start"]

@@ -21,7 +21,6 @@ import {
   Trash2,
   X,
   Inbox,
-  GripVertical,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useAppStore } from "@/lib/store";
@@ -223,12 +222,13 @@ export default function TasksPage() {
   const tasks = Array.isArray(tasksRaw) ? tasksRaw : [];
 
   const { data: users } = useQuery({
-    queryKey: ["users"],
+    queryKey: ["team-members", currentTeamId],
     queryFn: async () => {
-      const res = await fetch("/api/users");
+      const res = await fetch(`/api/team-members?teamId=${currentTeamId}`);
       if (!res.ok) return [];
       return res.json();
     },
+    enabled: !!currentTeamId,
   });
 
   const { data: teamsList } = useQuery({
@@ -469,10 +469,11 @@ export default function TasksPage() {
                   ) {
                     fetch(`/api/tasks/${menuTask.id}`, {
                       method: "DELETE",
-                    }).then(() => {
+                    }).then((res) => {
+                      if (!res.ok) throw new Error("Failed to delete");
                       queryClient.invalidateQueries({ queryKey: ["tasks"] });
                       toast.success("Task deleted");
-                    });
+                    }).catch(() => toast.error("Failed to delete task"));
                   }
                   setMenuTask(null);
                 }}

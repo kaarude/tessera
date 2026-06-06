@@ -23,6 +23,16 @@ export const PATCH = withRoute<{ id: string }>(
 
     const isCreator = existing.createdById === user.id;
     const isAssignee = existing.assigneeId === user.id;
+    if ((isCreator || isAssignee) && !user.isAdmin) {
+      const ownPermission = await hasPermission(
+        user.id,
+        "tasks:edit_own",
+        existing.teamId,
+      );
+      if (!ownPermission) {
+        return apiError(403, "Forbidden: tasks:edit_own required");
+      }
+    }
     if (!isCreator && !isAssignee && !user.isAdmin) {
       const perm = await hasPermission(
         user.id,
@@ -39,7 +49,7 @@ export const PATCH = withRoute<{ id: string }>(
         "tasks:move_columns",
         existing.teamId,
       );
-      if (!perm && !isCreator && !isAssignee && !user.isAdmin) {
+      if (!perm && !user.isAdmin) {
         return apiError(403, "Forbidden: tasks:move_columns required");
       }
     }
@@ -51,7 +61,7 @@ export const PATCH = withRoute<{ id: string }>(
         "tasks:reassign_users",
         existing.teamId,
       );
-      if (!perm && !isCreator && !user.isAdmin) {
+      if (!perm && !user.isAdmin) {
         return apiError(403, "Forbidden: tasks:reassign_users required");
       }
     }
@@ -61,9 +71,54 @@ export const PATCH = withRoute<{ id: string }>(
         "tasks:reassign_teams",
         existing.teamId,
       );
-      if (!perm && !isCreator && !user.isAdmin) {
+      if (!perm && !user.isAdmin) {
         return apiError(403, "Forbidden: tasks:reassign_teams required");
       }
+    }
+
+    const targetTeamId = data.teamId ?? existing.teamId;
+    const targetBoardId = data.boardId ?? existing.boardId;
+    const targetColumnId = data.columnId ?? existing.columnId;
+    const column = await prisma.taskColumn.findUnique({
+      where: { id: targetColumnId },
+      include: { board: { select: { id: true, teamId: true } } },
+    });
+    if (
+      !column ||
+      column.board.id !== targetBoardId ||
+      column.board.teamId !== targetTeamId
+    ) {
+      return apiError(400, "column/board/team mismatch");
+    }
+    if (
+      !user.memberships.some((membership) => membership.teamId === targetTeamId) &&
+      !user.isAdmin
+    ) {
+      return apiError(403, "Not a member of the target team");
+    }
+    if (data.groupId !== undefined && data.groupId !== existing.groupId) {
+      const perm = await hasPermission(
+        user.id,
+        "tasks:move_groups",
+        existing.teamId,
+      );
+      if (!perm && !user.isAdmin) {
+        return apiError(403, "Forbidden: tasks:move_groups required");
+      }
+    }
+    if (data.groupId) {
+      const group = await prisma.group.findUnique({ where: { id: data.groupId } });
+      if (!group || group.teamId !== targetTeamId) {
+        return apiError(400, "group/team mismatch");
+      }
+    }
+    if (data.assigneeId) {
+      const membership = await prisma.teamMembership.findUnique({
+        where: {
+          userId_teamId: { userId: data.assigneeId, teamId: targetTeamId },
+        },
+      });
+      if (!membership) return apiError(400, "assignee is not a team member");
     }
 
     const task = await prisma.task.update({
@@ -107,8 +162,15 @@ export const DELETE = withRoute<{ id: string }>(
     const existing = await prisma.task.findUnique({ where: { id } });
     if (!existing) return apiError(404, "Not found");
 
-    if (existing.createdById !== user.id && !user.isAdmin) {
-      return apiError(403, "Only the creator or an admin can delete a task");
+    const isOwn =
+      existing.createdById === user.id || existing.assigneeId === user.id;
+    const permission = await hasPermission(
+      user.id,
+      isOwn ? "tasks:delete_own" : "tasks:delete_others",
+      existing.teamId,
+    );
+    if (!permission && !user.isAdmin) {
+      return apiError(403, "Forbidden");
     }
 
     await prisma.task.delete({ where: { id } });

@@ -91,7 +91,8 @@ services:
       S3_BUCKET: ${S3_BUCKET:-tessera}
       S3_FORCE_PATH_STYLE: "true"
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      AUTO_SEED: ${AUTO_SEED:-1}
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+      AUTO_SEED: ${AUTO_SEED:-0}
     ports:
       - "${APP_PORT:-3000}:3000"
     networks:

@@ -12,7 +12,6 @@ import {
   Trash2,
   Save,
   X,
-  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -59,6 +58,7 @@ export default function NoteEditorPage() {
     }
     // We intentionally only re-sync when the note's id changes — not on
     // every cache update — to avoid clobbering in-progress edits.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note?.id]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -104,7 +104,7 @@ export default function NoteEditorPage() {
       return;
     }
     updateMutation.mutate({ title, content, isPrivate });
-  }, [title, content, isPrivate]);
+  }, [title, content, isPrivate, updateMutation]);
 
   // Keyboard shortcuts
   useEffect(() => {

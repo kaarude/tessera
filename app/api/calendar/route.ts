@@ -32,6 +32,12 @@ export async function GET(request: Request) {
         return apiError(403, "Not a member of that team");
       }
       where.teamId = teamId;
+      if (
+        !user.isAdmin &&
+        !(await hasPermission(user.id, "calendar:view_team", teamId))
+      ) {
+        return apiError(403, "Forbidden: calendar:view_team required");
+      }
     } else {
       where.OR = [
         { userId: user.id },
@@ -83,6 +89,32 @@ export const POST = withRoute(
 
     if (teamId && !user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
       return apiError(403, "Not a member of that team");
+    }
+    if (groupId) {
+      const group = await prisma.group.findUnique({ where: { id: groupId } });
+      if (!group || group.teamId !== teamId) {
+        return apiError(400, "group/team mismatch");
+      }
+    }
+    if (assignedToId) {
+      if (
+        !(await hasPermission(
+          user.id,
+          "calendar:assign_users",
+          teamId ?? undefined,
+        )) &&
+        !user.isAdmin
+      ) {
+        return apiError(403, "Forbidden: calendar:assign_users required");
+      }
+      if (teamId) {
+        const membership = await prisma.teamMembership.findUnique({
+          where: { userId_teamId: { userId: assignedToId, teamId } },
+        });
+        if (!membership) {
+          return apiError(400, "assignee is not a team member");
+        }
+      }
     }
 
     const entry = await prisma.calendarEntry.create({

@@ -60,6 +60,9 @@ export function mapError(err: unknown) {
   const msg =
     err instanceof Error ? err.message : "Internal server error";
   if (msg === "Unauthorized") return apiError(401, "Unauthorized");
+  if (msg === "Password change required") {
+    return apiError(403, "Password change required");
+  }
   if (msg.startsWith("Forbidden")) return apiError(403, msg);
   if (err && typeof err === "object" && "name" in err && (err as { name: unknown }).name === "ZodError") {
     return apiError(400, "Invalid request", {
