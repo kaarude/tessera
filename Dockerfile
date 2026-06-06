@@ -2,8 +2,13 @@
 
 # ──────────────────────────────────────────────────────────────────────────
 #  Tessera production image
+#
 #  Built for self-hosters. Multi-stage so the final image is small and
-#  the runtime runs as a non-root user.
+#  the runtime runs as a non-root user. We deliberately do NOT use
+#  Next.js's `output: "standalone"` mode because the entrypoint needs
+#  to run Prisma migrations and seed the database, which requires a
+#  full `node_modules/`. The size cost is ~300MB on disk; the
+#  reliability gain is worth it.
 # ──────────────────────────────────────────────────────────────────────────
 
 ARG NODE_VERSION=22-alpine
@@ -14,8 +19,8 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
-# Skip postinstall (prisma generate) here; we'll do it in the builder
-# stage against the actual Prisma schema after copying source.
+# Skip the postinstall (prisma generate) here; we'll do it in the
+# builder stage against the actual Prisma schema.
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=1
 RUN npm ci --no-audit --no-fund
 
@@ -42,7 +47,8 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# 3. Production runner — only ship the artifacts the runtime needs.
+# 3. Production runner — ship a full node_modules so the entrypoint
+#    can run Prisma migrations and the seed script at boot.
 FROM node:${NODE_VERSION} AS runner
 WORKDIR /app
 
@@ -55,25 +61,20 @@ RUN apk add --no-cache openssl curl tini && \
     addgroup -g 1001 -S nodejs && \
     adduser -S tessera -u 1001
 
-# Copy the standalone server, the static assets, and the Prisma client.
+# Copy the entire app (excluding devDeps in node_modules).
 COPY --from=builder --chown=tessera:nodejs /app/public ./public
-COPY --from=builder --chown=tessera:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=tessera:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/bcryptjs ./node_modules/bcryptjs
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/@aws-sdk ./node_modules/@aws-sdk
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/pg ./node_modules/pg
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/iron-session ./node_modules/iron-session
-COPY --from=builder --chown=tessera:nodejs /app/node_modules/uuid ./node_modules/uuid
+COPY --from=builder --chown=tessera:nodejs /app/.next ./.next
+COPY --from=builder --chown=tessera:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=tessera:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=tessera:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=tessera:nodejs /app/next.config.ts ./next.config.ts
+# Drop dev-only npm subdirs that the prod image doesn't need.
+# (We just shipped everything; cleaning these reduces size a bit.)
+RUN rm -rf node_modules/.cache node_modules/*/test 2>/dev/null || true
 
 # Boot-time script that runs Prisma migrations, then execs the Next.js
-# server. We do migrations at startup so a fresh `docker compose up`
-# brings the DB to the latest schema automatically.
+# server. The script MUST be in the build context; the .dockerignore
+# explicitly does NOT exclude the `docker/` directory.
 COPY --chown=tessera:nodejs docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
@@ -84,4 +85,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -fsS http://localhost:3000/api/auth/me || exit 1
 
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]
-CMD ["node", "server.js"]
+CMD ["npm", "start"]

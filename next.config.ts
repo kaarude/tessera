@@ -1,20 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Standalone output gives us a self-contained `server.js` that the
-  // production Docker image can run without copying node_modules in full.
-  output: "standalone",
-  // Allow `bcryptjs` (pure-JS) without bundling complaints.
+  // We deliberately do NOT use `output: "standalone"` because the
+  // entrypoint needs to run Prisma migrations and seed the database
+  // at boot, which requires a full `node_modules/`. The Dockerfile
+  // ships the whole `node_modules/` and a slim base, which works out
+  // roughly the same size but is more robust.
+  //
+  // `serverExternalPackages` keeps Prisma + bcryptjs + pg from being
+  // bundled into the client/edge runtime; they need to be loaded
+  // from node_modules at runtime.
   serverExternalPackages: ["@prisma/client", "prisma", "bcryptjs", "pg"],
-  // Some deps (notably @prisma + bcryptjs) are CommonJS and should not
-  // be transpiled into the bundle.
-  experimental: {
-    // Avoid the workspace-root warning when running inside a monorepo
-    // (harmless for single-package installs).
-  },
-  // Trust the proxy when running behind one. The rate limiter and
-  // audit log trust x-forwarded-for. Adjust this to your proxy.
-  // (The actual middleware lives in entrypoint.sh + auth.ts.)
 };
 
 export default nextConfig;

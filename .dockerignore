@@ -1,3 +1,6 @@
+# This file lives here to keep it out of the Docker build context.
+# The `docker/` directory is NOT ignored because the Dockerfile COPYs
+# docker/entrypoint.sh from it.
 .git
 .gitignore
 .env
@@ -20,7 +23,6 @@ test-results
 README.md
 docs/
 tests/
-docker/
 scripts/
 .dockerignore
 Dockerfile

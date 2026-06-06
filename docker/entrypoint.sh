@@ -28,17 +28,19 @@ fi
 
 if [ "${SKIP_MIGRATIONS:-0}" != "1" ]; then
   echo "[tessera] running database migrations..."
-  if ! npx prisma migrate deploy; then
+  # Run the Prisma CLI directly from the bundled node_modules.
+  if ! node ./node_modules/prisma/build/index.js migrate deploy; then
     echo "[tessera] FATAL: database migration failed." >&2
     exit 1
   fi
 
-  # Seed on first boot if the database is empty. Safe to call repeatedly
-  # because the seed script deletes everything first.
-  USER_COUNT=$(node -e "const{PrismaClient}=require('@prisma/client');(async()=>{const p=new PrismaClient();const c=await p.user.count();console.log(c);await p.\$disconnect();})()" 2>/dev/null || echo "0")
+  # Seed on first boot if the database is empty.
+  USER_COUNT=$(node -e "const{PrismaClient}=require('@prisma/client');(async()=>{try{const p=new PrismaClient();const c=await p.user.count();console.log(c);await p.\$disconnect();}catch(e){console.log('err')}})()" 2>/dev/null || echo "0")
   if [ "${AUTO_SEED:-0}" = "1" ] && [ "${USER_COUNT}" = "0" ]; then
     echo "[tessera] seeding database with demo data..."
-    npm run seed || echo "[tessera] seed failed (non-fatal)"
+    if ! node ./node_modules/tsx/dist/cli.mjs prisma/seed.ts; then
+      echo "[tessera] seed failed (non-fatal)"
+    fi
   fi
 fi
 
