@@ -32,7 +32,14 @@ async function main() {
   await prisma.user.deleteMany();
 
   // Create admin
-  const adminPassword = randomPassword();
+  //
+  // If TESSERA_SEED_PASSWORD is set, use it as a deterministic password
+  // and skip the mustChangePassword flag. This is intended for tests
+  // (Playwright smoke, CI ephemeral DBs) and for self-hosters who
+  // explicitly want a known initial password. In production the env
+  // should be unset and a random password is generated and printed.
+  const seedPassword = process.env.TESSERA_SEED_PASSWORD;
+  const adminPassword = seedPassword ?? randomPassword();
   const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
   const admin = await prisma.user.create({
     data: {
@@ -40,12 +47,12 @@ async function main() {
       name: "System Administrator",
       passwordHash: adminPasswordHash,
       isAdmin: true,
-      mustChangePassword: true,
+      mustChangePassword: !seedPassword,
     },
   });
 
   // Create regular user
-  const userPassword = randomPassword();
+  const userPassword = seedPassword ?? randomPassword();
   const userPasswordHash = await bcrypt.hash(userPassword, 12);
   const user = await prisma.user.create({
     data: {
@@ -53,7 +60,7 @@ async function main() {
       name: "Jane Cooper",
       passwordHash: userPasswordHash,
       isAdmin: false,
-      mustChangePassword: true,
+      mustChangePassword: !seedPassword,
     },
   });
 
@@ -394,12 +401,19 @@ async function main() {
 
   console.log("Seed completed successfully!");
   console.log("");
-  console.log("  Login credentials (CHANGE THESE IMMEDIATELY):");
-  console.log(`    admin: admin@tessera.app / ${adminPassword}`);
-  console.log(`    user:  user@tessera.app  / ${userPassword}`);
-  console.log("");
-  console.log("  Both accounts are flagged mustChangePassword — they");
-  console.log("  will be required to set a new password on first login.");
+  if (seedPassword) {
+    console.log("  TESSERA_SEED_PASSWORD was set — seeded users have a");
+    console.log("  deterministic password and mustChangePassword is OFF.");
+    console.log(`    admin: admin@tessera.app / ${adminPassword}`);
+    console.log(`    user:  user@tessera.app  / ${userPassword}`);
+  } else {
+    console.log("  Login credentials (CHANGE THESE IMMEDIATELY):");
+    console.log(`    admin: admin@tessera.app / ${adminPassword}`);
+    console.log(`    user:  user@tessera.app  / ${userPassword}`);
+    console.log("");
+    console.log("  Both accounts are flagged mustChangePassword — they");
+    console.log("  will be required to set a new password on first login.");
+  }
 }
 
 main()
