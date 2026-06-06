@@ -195,7 +195,11 @@ export const CalendarCreateBody = z
     groupId: cuid.nullable().optional(),
     assignedToId: cuid.nullable().optional(),
   })
-  .strict();
+  .strict()
+  .refine((data) => !data.endDate || data.endDate >= data.startDate, {
+    message: "endDate must not be before startDate",
+    path: ["endDate"],
+  });
 
 export const CalendarUpdateBody = z
   .object({
@@ -216,6 +220,6 @@ export const ShareBody = z
     userId: cuid.nullable().optional(),
   })
   .strict()
-  .refine((d) => d.teamId || d.userId, {
-    message: "Provide teamId or userId",
+  .refine((data) => Boolean(data.teamId) !== Boolean(data.userId), {
+    message: "Provide exactly one of teamId or userId",
   });

@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
-import { uploadToS3 } from "@/lib/s3";
+import { deleteFromS3, uploadToS3 } from "@/lib/s3";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
+import { hasPermission } from "@/lib/permissions-server";
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
 
@@ -39,13 +40,21 @@ export async function POST(request: Request) {
       }
       const note = await prisma.note.findUnique({
         where: { id: noteId },
-        select: { ownerId: true },
+        select: { ownerId: true, teamId: true },
       });
       if (!note) {
         return NextResponse.json({ error: "Note not found" }, { status: 404 });
       }
       if (note.ownerId !== user.id && !user.isAdmin) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const allowed = await hasPermission(
+        user.id,
+        "notes:upload_attachments",
+        note.teamId ?? undefined,
+      );
+      if (!allowed && !user.isAdmin) {
+        return apiError(403, "Forbidden: notes:upload_attachments required");
       }
     }
 
@@ -59,6 +68,24 @@ export async function POST(request: Request) {
     const key = `${keyPrefix}/${Date.now()}-${safeName}`;
 
     await uploadToS3(key, buffer, file.type || "application/octet-stream");
+    let attachment = null;
+    if (noteId) {
+      try {
+        attachment = await prisma.noteAttachment.create({
+          data: {
+            noteId,
+            filename: file.name,
+            s3Key: key,
+            mimeType: file.type || "application/octet-stream",
+            size: file.size,
+            uploaderId: user.id,
+          },
+        });
+      } catch (error) {
+        await deleteFromS3(key).catch(() => undefined);
+        throw error;
+      }
+    }
 
     await logAudit({
       actorId: user.id,
@@ -73,6 +100,7 @@ export async function POST(request: Request) {
       filename: file.name,
       size: file.size,
       mimeType: file.type,
+      attachment,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {

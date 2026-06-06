@@ -1,6 +1,13 @@
 import { prisma } from "./prisma";
+import { ALL_PERMISSIONS } from "./permissions";
 
 export async function getUserPermissions(userId: string, teamId?: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isAdmin: true },
+  });
+  if (user?.isAdmin) return new Set<string>(ALL_PERMISSIONS);
+
   const userRoles = await prisma.userRole.findMany({
     where: {
       userId,

@@ -6,8 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  CalendarDays,
-  Clock,
   X,
   Trash2,
 } from "lucide-react";
@@ -20,8 +18,6 @@ import {
   eachDayOfInterval,
   isSameMonth,
   isSameDay,
-  addMonths,
-  subMonths,
   isToday,
 } from "date-fns";
 import { AppShell } from "@/components/app-shell";
@@ -38,7 +34,6 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -230,7 +225,25 @@ export default function CalendarPage() {
                   <div
                     key={idx}
                     onClick={() => {
-                      setSelectedDate(day);
+                      setNewEvent((event) => ({
+                        ...event,
+                        startDate: toLocalInput(
+                          new Date(
+                            day.getFullYear(),
+                            day.getMonth(),
+                            day.getDate(),
+                            9,
+                          ),
+                        ),
+                        endDate: toLocalInput(
+                          new Date(
+                            day.getFullYear(),
+                            day.getMonth(),
+                            day.getDate(),
+                            10,
+                          ),
+                        ),
+                      }));
                       setShowCreate(true);
                     }}
                     className={cn(

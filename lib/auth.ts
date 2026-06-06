@@ -63,6 +63,8 @@ export interface SessionData {
   email?: string;
   name?: string;
   isAdmin?: boolean;
+  sessionVersion?: number;
+  passwordChangeOnly?: boolean;
 }
 
 export async function getSession() {
@@ -78,7 +80,9 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export async function requireAuth(): Promise<SessionUser> {
+export async function requireAuth(options?: {
+  allowPasswordChangeOnly?: boolean;
+}): Promise<SessionUser> {
   const session = await getSession();
   if (!session.userId) {
     throw new Error("Unauthorized");
@@ -86,6 +90,16 @@ export async function requireAuth(): Promise<SessionUser> {
   const user = await loadSessionUser(session.userId);
   if (!user) {
     throw new Error("Unauthorized");
+  }
+  if (session.sessionVersion !== user.sessionVersion) {
+    session.destroy();
+    throw new Error("Unauthorized");
+  }
+  if (
+    (session.passwordChangeOnly || user.mustChangePassword) &&
+    !options?.allowPasswordChangeOnly
+  ) {
+    throw new Error("Password change required");
   }
   return user;
 }

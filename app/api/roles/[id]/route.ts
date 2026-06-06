@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withRoute, logAudit } from "@/lib/route";
+import { withRoute } from "@/lib/route";
 import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
 import { RoleUpdateBody } from "@/lib/schemas";
@@ -26,31 +26,34 @@ export const PATCH = withRoute<{ id: string }>(
       (await hasPermission(user.id, "roles:edit", existing.teamId ?? undefined));
     if (!allowed) return apiError(403, "Forbidden: roles:edit required");
 
-    if (permissions !== undefined) {
-      await prisma.rolePermission.deleteMany({ where: { roleId: id } });
-      if (permissions.length > 0) {
-        await prisma.rolePermission.createMany({
-          data: permissions.map((p) => ({ roleId: id, permission: p })),
-        });
+    const role = await prisma.$transaction(async (tx) => {
+      if (permissions !== undefined) {
+        await tx.rolePermission.deleteMany({ where: { roleId: id } });
+        if (permissions.length > 0) {
+          await tx.rolePermission.createMany({
+            data: permissions.map((permission) => ({ roleId: id, permission })),
+          });
+        }
       }
-    }
-
-    const role = await prisma.role.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(description !== undefined && { description }),
-      },
-      include: { permissions: true },
-    });
-
-    await logAudit({
-      actorId: user.id,
-      action: "update",
-      entityType: "role",
-      entityId: id,
-      teamId: existing.teamId ?? undefined,
-      metadata: { name: role.name },
+      const updated = await tx.role.update({
+        where: { id },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(description !== undefined && { description }),
+        },
+        include: { permissions: true },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "update",
+          entityType: "role",
+          entityId: id,
+          teamId: existing.teamId,
+          metadata: { name: updated.name },
+        },
+      });
+      return updated;
     });
 
     return NextResponse.json(role);
@@ -70,13 +73,17 @@ export const DELETE = withRoute<{ id: string }>(
       (await hasPermission(user.id, "roles:delete", existing.teamId ?? undefined));
     if (!allowed) return apiError(403, "Forbidden: roles:delete required");
 
-    await prisma.role.delete({ where: { id } });
-    await logAudit({
-      actorId: user.id,
-      action: "delete",
-      entityType: "role",
-      entityId: id,
-      teamId: existing.teamId ?? undefined,
+    await prisma.$transaction(async (tx) => {
+      await tx.role.delete({ where: { id } });
+      await tx.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "delete",
+          entityType: "role",
+          entityId: id,
+          teamId: existing.teamId,
+        },
+      });
     });
     return NextResponse.json({ success: true });
   },

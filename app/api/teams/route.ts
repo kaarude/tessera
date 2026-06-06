@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withRoute, mapError, logAudit, requireAuth } from "@/lib/route";
+import { withRoute, mapError, requireAuth } from "@/lib/route";
 import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
 import { TeamCreateBody } from "@/lib/schemas";
@@ -31,22 +31,24 @@ export const POST = withRoute(
       (await hasPermission(user.id, "teams:create"));
     if (!allowed) return apiError(403, "Forbidden: teams:create required");
 
-    const team = await prisma.team.create({
-      data: { name, description, ownerId: user.id },
-    });
-
-    // The creator is automatically a member.
-    await prisma.teamMembership.create({
-      data: { userId: user.id, teamId: team.id },
-    });
-
-    await logAudit({
-      actorId: user.id,
-      action: "create",
-      entityType: "team",
-      entityId: team.id,
-      teamId: team.id,
-      metadata: { name },
+    const team = await prisma.$transaction(async (tx) => {
+      const created = await tx.team.create({
+        data: { name, description, ownerId: user.id },
+      });
+      await tx.teamMembership.create({
+        data: { userId: user.id, teamId: created.id },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: "create",
+          entityType: "team",
+          entityId: created.id,
+          teamId: created.id,
+          metadata: { name },
+        },
+      });
+      return created;
     });
 
     return NextResponse.json(team, { status: 201 });

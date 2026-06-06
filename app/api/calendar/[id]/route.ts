@@ -4,6 +4,7 @@ import { withRoute, logAudit } from "@/lib/route";
 import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
 import { CalendarUpdateBody } from "@/lib/schemas";
+import { validateCalendarDates } from "@/lib/access";
 
 const CUID = /^c[a-z0-9]{20,}$/;
 
@@ -22,6 +23,16 @@ export const PATCH = withRoute<{ id: string }>(
     if (!existing) return apiError(404, "Not found");
 
     const isOwner = existing.userId === user.id;
+    if (isOwner && !user.isAdmin) {
+      const ownPermission = await hasPermission(
+        user.id,
+        "calendar:edit_own",
+        existing.teamId ?? undefined,
+      );
+      if (!ownPermission) {
+        return apiError(403, "Forbidden: calendar:edit_own required");
+      }
+    }
     if (!isOwner && !user.isAdmin) {
       const perm = await hasPermission(
         user.id,
@@ -29,6 +40,46 @@ export const PATCH = withRoute<{ id: string }>(
         existing.teamId ?? undefined,
       );
       if (!perm) return apiError(403, "Forbidden");
+    }
+
+    const targetTeamId =
+      data.teamId === undefined ? existing.teamId : data.teamId;
+    if (
+      targetTeamId &&
+      !user.memberships.some((membership) => membership.teamId === targetTeamId) &&
+      !user.isAdmin
+    ) {
+      return apiError(403, "Not a member of the target team");
+    }
+    if (data.groupId) {
+      const group = await prisma.group.findUnique({ where: { id: data.groupId } });
+      if (!group || group.teamId !== targetTeamId) {
+        return apiError(400, "group/team mismatch");
+      }
+    }
+    if (data.assignedToId !== undefined && data.assignedToId !== existing.assignedToId) {
+      const permission = await hasPermission(
+        user.id,
+        "calendar:assign_users",
+        existing.teamId ?? undefined,
+      );
+      if (!permission && !user.isAdmin) {
+        return apiError(403, "Forbidden: calendar:assign_users required");
+      }
+    }
+    if (data.assignedToId && targetTeamId) {
+      const membership = await prisma.teamMembership.findUnique({
+        where: {
+          userId_teamId: { userId: data.assignedToId, teamId: targetTeamId },
+        },
+      });
+      if (!membership) return apiError(400, "assignee is not a team member");
+    }
+    const targetStart = data.startDate ?? existing.startDate;
+    const targetEnd =
+      data.endDate === undefined ? existing.endDate : data.endDate;
+    if (!validateCalendarDates(targetStart, targetEnd)) {
+      return apiError(400, "endDate must not be before startDate");
     }
 
     const entry = await prisma.calendarEntry.update({
@@ -68,7 +119,13 @@ export const DELETE = withRoute<{ id: string }>(
     const existing = await prisma.calendarEntry.findUnique({ where: { id } });
     if (!existing) return apiError(404, "Not found");
 
-    if (existing.userId !== user.id && !user.isAdmin) {
+    const isOwner = existing.userId === user.id;
+    const permission = await hasPermission(
+      user.id,
+      isOwner ? "calendar:delete_own" : "calendar:delete_others",
+      existing.teamId ?? undefined,
+    );
+    if (!permission && !user.isAdmin) {
       return apiError(403, "Forbidden");
     }
 

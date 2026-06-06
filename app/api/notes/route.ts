@@ -59,7 +59,6 @@ export async function GET(request: Request) {
       if (!teamIds.includes(teamId)) return apiError(403, "Not a member of that team");
       (where.AND as Prisma.NoteWhereInput[]).push({ teamId });
     }
-
     if (search) {
       (where.AND as Prisma.NoteWhereInput[]).push({
         OR: [
@@ -112,6 +111,12 @@ export const POST = withRoute(
       const isMember = user.memberships.some((m) => m.teamId === teamId);
       if (!isMember && !user.isAdmin) {
         return apiError(403, "Not a member of that team");
+      }
+    }
+    if (groupId) {
+      const group = await prisma.group.findUnique({ where: { id: groupId } });
+      if (!group || group.teamId !== teamId) {
+        return apiError(400, "group/team mismatch");
       }
     }
 

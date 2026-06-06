@@ -7,6 +7,7 @@ import {
   RoleCreateBody,
   UserCreateBody,
   CalendarCreateBody,
+  ShareBody,
 } from "@/lib/schemas";
 
 /**
@@ -19,12 +20,6 @@ import {
  */
 
 describe("NoteCreateBody", () => {
-  const ok = NoteCreateBody.safeParse({
-    title: "Hello",
-    content: "Body",
-    teamId: "ckxxxxxxxxxxxxxxxxxxxxxx",
-    isPrivate: true,
-  });
   it("accepts a minimal note", () => {
     const r = NoteCreateBody.safeParse({ title: "x" });
     expect(r.success).toBe(true);
@@ -43,6 +38,18 @@ describe("NoteCreateBody", () => {
   it("rejects a malformed CUID", () => {
     const r = NoteCreateBody.safeParse({ title: "x", teamId: "not-a-cuid" });
     expect(r.success).toBe(false);
+  });
+});
+
+describe("ShareBody", () => {
+  it("requires exactly one share target", () => {
+    expect(ShareBody.safeParse({}).success).toBe(false);
+    expect(
+      ShareBody.safeParse({
+        teamId: "ckxxxxxxxxxxxxxxxxxxxxxx",
+        userId: "ckxxxxxxxxxxxxxxxxxxxxxy",
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -154,6 +161,15 @@ describe("CalendarCreateBody", () => {
     const r = CalendarCreateBody.safeParse({
       title: "Sprint",
       startDate: "tomorrow at 9",
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it("rejects an end date before the start date", () => {
+    const r = CalendarCreateBody.safeParse({
+      title: "Sprint",
+      startDate: "2026-06-06T12:00:00.000Z",
+      endDate: "2026-06-06T11:00:00.000Z",
     });
     expect(r.success).toBe(false);
   });
