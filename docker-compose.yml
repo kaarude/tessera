@@ -92,7 +92,13 @@ services:
       S3_FORCE_PATH_STYLE: "true"
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       TRUST_PROXY: ${TRUST_PROXY:-0}
-      AUTO_SEED: ${AUTO_SEED:-0}
+      # AUTO_SEED defaults to 1 so a fresh `docker compose up` produces
+      # a working admin@tessera.app account. The seed only fires on
+      # first boot (when the users table is empty) so existing data
+      # is never overwritten on restart. Set to 0 in production
+      # after the first successful login + password change, or pass
+      # TESSERA_SEED_PASSWORD to use a deterministic credential.
+      AUTO_SEED: ${AUTO_SEED:-1}
     ports:
       - "${APP_PORT:-3000}:3000"
     networks:

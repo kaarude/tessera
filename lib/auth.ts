@@ -91,10 +91,7 @@ export async function requireAuth(options?: {
   if (!user) {
     throw new Error("Unauthorized");
   }
-  if (session.sessionVersion !== user.sessionVersion) {
-    session.destroy();
-    throw new Error("Unauthorized");
-  }
+  await reconcileSessionVersion(session, user.sessionVersion);
   if (
     (session.passwordChangeOnly || user.mustChangePassword) &&
     !options?.allowPasswordChangeOnly
@@ -102,6 +99,44 @@ export async function requireAuth(options?: {
     throw new Error("Password change required");
   }
   return user;
+}
+
+/**
+ * Reconcile a session's `sessionVersion` against the user's current one.
+ *
+ * - If the session was issued before the sessionVersion migration
+ *   landed (i.e. `session.sessionVersion === undefined`), upgrade it
+ *   in place to the user's current version. This prevents the deploy
+ *   from force-logging-out every active user.
+ * - If the session has a version but it doesn't match the user's
+ *   current version, the session is destroyed. This is the
+ *   post-deploy state — password rotations invalidate older sessions.
+ *
+ * Extracted so the logic can be unit-tested without iron-session.
+ */
+export async function reconcileSessionVersion(
+  session: { sessionVersion?: number; destroy: () => void; save?: () => Promise<void> },
+  userSessionVersion: number,
+): Promise<void> {
+  if (session.sessionVersion === undefined) {
+    // Pre-migration session. The user hasn't rotated their password
+    // (userSessionVersion === 0). Upgrade the session in place.
+    if (userSessionVersion === 0) {
+      session.sessionVersion = 0;
+      await session.save?.();
+    } else {
+      // User already rotated (userSessionVersion >= 1) before this
+      // session ever talked to the new code. Treat the pre-migration
+      // session as stale and force a fresh login.
+      session.destroy();
+      throw new Error("Unauthorized");
+    }
+    return;
+  }
+  if (session.sessionVersion !== userSessionVersion) {
+    session.destroy();
+    throw new Error("Unauthorized");
+  }
 }
 
 export async function requireAdmin(): Promise<SessionUser> {
