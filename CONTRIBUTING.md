@@ -16,7 +16,7 @@ npm run seed
 npm run dev
 ```
 
-Open <http://localhost:3000> and log in with `admin@tessera.app` / `admin123`.
+Open <http://localhost:3000> and log in with `admin@tessera.app` and the random password printed by `npm run seed`.
 
 ## Project layout
 

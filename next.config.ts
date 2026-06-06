@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   // bundled into the client/edge runtime; they need to be loaded
   // from node_modules at runtime.
   serverExternalPackages: ["@prisma/client", "prisma", "bcryptjs", "pg"],
+
+  // Explicitly pin the Turbopack workspace root to this directory.
+  // Without this, Next.js picks the nearest ancestor that contains a
+  // lockfile (e.g. /Users/carl/) and emits a warning. Harmless but
+  // noisy in monorepo-adjacent setups.
+  turbopack: {
+    root: process.cwd(),
+  },
 };
 
 export default nextConfig;
