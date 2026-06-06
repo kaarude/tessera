@@ -39,10 +39,13 @@ export async function POST(request: Request) {
     }
 
     const email = body.email.toLowerCase();
-    const { allowed, retryAfterMs } = await checkRateLimit([
-      `ip:${ip}`,
-      `email:${email}`,
-    ]);
+    // Build the rate-limit key set. The IP key is only included when
+    // we have a trusted client IP (TRUST_PROXY=1 with a valid header).
+    // Without it, every request would share the same "ip:" bucket and
+    // a single user failing login would throttle everyone.
+    const rateLimitKeys = [`email:${email}`];
+    if (ip) rateLimitKeys.push(`ip:${ip}`);
+    const { allowed, retryAfterMs } = await checkRateLimit(rateLimitKeys);
     if (!allowed) {
       const retryAfterSec = Math.ceil(retryAfterMs / 1000);
       return NextResponse.json(
