@@ -66,6 +66,8 @@ COPY --from=builder --chown=tessera:nodejs /app/public ./public
 COPY --from=builder --chown=tessera:nodejs /app/.next ./.next
 COPY --from=builder --chown=tessera:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=tessera:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=tessera:nodejs /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder --chown=tessera:nodejs /app/lib ./lib
 COPY --from=builder --chown=tessera:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=tessera:nodejs /app/next.config.ts ./next.config.ts
 # Drop dev-only npm subdirs that the prod image doesn't need.

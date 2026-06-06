@@ -40,7 +40,9 @@ export default function LoginPage() {
       }
 
       toast.success("Welcome back!");
-      router.push("/dashboard");
+      // Use window.location for full page navigation to ensure
+      // the new session cookie is sent with the first request
+      window.location.href = "/dashboard";
     } catch {
       toast.error("Something went wrong");
     } finally {
@@ -139,10 +141,11 @@ export default function LoginPage() {
             <div className="rounded-xl border border-border bg-card p-6 shadow-lg">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
                     Email
                   </label>
                   <input
+                    id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -152,11 +155,12 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
                     Password
                   </label>
                   <div className="relative">
                     <input
+                      id="password"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}

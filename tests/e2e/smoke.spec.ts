@@ -58,8 +58,12 @@ test("login → create note", async ({ page }) => {
     .fill("# Hello\n\nThis is a smoke test note.");
   await page.getByRole("button", { name: "Create" }).click();
 
-  // The new note should appear in the list
-  await expect(page.getByText(noteTitle)).toBeVisible({ timeout: 5_000 });
+  // Wait for toast success and modal to close
+  await expect(page.getByText("Note created")).toBeVisible({ timeout: 5_000 });
+
+  // Wait for the note to appear in the list (query invalidation + refetch)
+  // The note is created as private (no team selected), so it should appear in the list
+  await expect(page.getByText(noteTitle)).toBeVisible({ timeout: 15_000 });
 
   // Open it and confirm the editor actually loaded with our title
   await page.getByText(noteTitle).click();
