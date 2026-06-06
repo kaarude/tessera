@@ -1,5 +1,16 @@
+import { randomBytes } from "node:crypto";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcryptjs";
+
+/**
+ * Generate a random password that's printed to stdout at the end of
+ * the seed. Avoids the classic "demo data ships with admin123" trap:
+ * even if a self-hoster forgets to delete the seed users, an attacker
+ * can't guess the credentials because they're randomly generated.
+ */
+function randomPassword(): string {
+  return randomBytes(12).toString("base64url");
+}
 
 async function main() {
   // Clean slate
@@ -21,24 +32,28 @@ async function main() {
   await prisma.user.deleteMany();
 
   // Create admin
-  const adminPassword = await bcrypt.hash("admin123", 12);
+  const adminPassword = randomPassword();
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
   const admin = await prisma.user.create({
     data: {
       email: "admin@tessera.app",
       name: "System Administrator",
-      passwordHash: adminPassword,
+      passwordHash: adminPasswordHash,
       isAdmin: true,
+      mustChangePassword: true,
     },
   });
 
   // Create regular user
-  const userPassword = await bcrypt.hash("user123", 12);
+  const userPassword = randomPassword();
+  const userPasswordHash = await bcrypt.hash(userPassword, 12);
   const user = await prisma.user.create({
     data: {
       email: "user@tessera.app",
       name: "Jane Cooper",
-      passwordHash: userPassword,
+      passwordHash: userPasswordHash,
       isAdmin: false,
+      mustChangePassword: true,
     },
   });
 
@@ -378,8 +393,13 @@ async function main() {
   });
 
   console.log("Seed completed successfully!");
-  console.log("Admin login: admin@tessera.app / admin123");
-  console.log("User login: user@tessera.app / user123");
+  console.log("");
+  console.log("  Login credentials (CHANGE THESE IMMEDIATELY):");
+  console.log(`    admin: admin@tessera.app / ${adminPassword}`);
+  console.log(`    user:  user@tessera.app  / ${userPassword}`);
+  console.log("");
+  console.log("  Both accounts are flagged mustChangePassword — they");
+  console.log("  will be required to set a new password on first login.");
 }
 
 main()
