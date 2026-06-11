@@ -14,7 +14,7 @@ will not be patched.
 
 **Please do not open a public GitHub issue for security bugs.**
 
-Email `security@tessera.app` (or, if you don't trust the email channel,
+Email `katana.have.drip@gmail.com` (or, if you don't trust the email channel,
 DM the maintainer via the GitHub account listed in the README). Include:
 
 - A clear description of the issue
