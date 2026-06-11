@@ -229,7 +229,7 @@ typecheck + tests before opening a PR.
 ## Security
 
 Found a security issue? **Do not file a public issue.** Email
-[security@tessera.app](mailto:security@tessera.app). See
+[katana.have.drip@gmail.com](mailto:katana.have.drip@gmail.com). See
 [SECURITY.md](./SECURITY.md) for the full policy.
 
 ## License
