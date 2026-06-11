@@ -3,7 +3,6 @@ import {
   NoteCreateBody,
   TaskCreateBody,
   TeamCreateBody,
-  GroupCreateBody,
   RoleCreateBody,
   UserCreateBody,
   CalendarCreateBody,
@@ -90,18 +89,6 @@ describe("TeamCreateBody", () => {
   it("accepts a name + description", () => {
     const r = TeamCreateBody.safeParse({ name: "Eng", description: "x" });
     expect(r.success).toBe(true);
-  });
-});
-
-describe("GroupCreateBody", () => {
-  it("requires name + teamId", () => {
-    const r = GroupCreateBody.safeParse({ name: "Frontend" });
-    expect(r.success).toBe(false);
-  });
-
-  it("rejects an invalid teamId", () => {
-    const r = GroupCreateBody.safeParse({ name: "x", teamId: "bad" });
-    expect(r.success).toBe(false);
   });
 });
 

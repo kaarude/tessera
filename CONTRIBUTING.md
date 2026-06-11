@@ -28,7 +28,6 @@ app/
   calendar/   # Calendar views
   tasks/      # Kanban taskboard
   teams/      # Team CRUD
-  groups/     # Group CRUD
   roles/      # Roles & permission editor
   audit/      # Audit log viewer
   users/      # Admin user management

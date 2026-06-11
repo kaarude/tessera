@@ -9,7 +9,6 @@ import {
   Calendar,
   CheckSquare,
   Users,
-  FolderTree,
   Shield,
   ClipboardList,
   Settings,
@@ -28,7 +27,6 @@ const mainNavItems = [
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/tasks", label: "Taskboard", icon: CheckSquare },
   { href: "/teams", label: "Teams", icon: Users },
-  { href: "/groups", label: "Groups", icon: FolderTree },
 ];
 
 const adminNavItems = [

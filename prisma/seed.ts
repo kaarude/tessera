@@ -13,7 +13,7 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      email: "admin",
+      email: "admin@tessera.app",
       name: "Admin",
       passwordHash,
       isAdmin: true,

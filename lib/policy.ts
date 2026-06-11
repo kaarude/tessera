@@ -125,7 +125,7 @@ export function canChangePassword(
 
 /**
  * Task edit policy. Reassignment to a different user / team / board /
- * column / group requires the corresponding `tasks:reassign_*` or
+ * column requires the corresponding `tasks:reassign_*` or
  * `tasks:move_*` permission; editing fields like title/description
  * requires `tasks:edit_own` (or `tasks:edit_others` if not the
  * creator/assignee).
@@ -141,7 +141,6 @@ export function canEditTask(
   const protectedFields: Record<string, string> = {
     assigneeId: "tasks:reassign_users",
     teamId: "tasks:reassign_teams",
-    groupId: "tasks:move_groups",
     boardId: "tasks:move_columns",
     columnId: "tasks:move_columns",
     position: "tasks:move_columns",
@@ -180,7 +179,7 @@ export function validateNoteShareTarget(
 }
 
 /**
- * Throws if a task's (teamId, boardId, columnId, groupId) is internally
+ * Throws if a task's (teamId, boardId, columnId) is internally
  * inconsistent. The same invariant is enforced at the database level
  * by composite foreign keys (see migration
  * `20260606122000_enforce_tenant_relations`).
@@ -190,15 +189,11 @@ export function validateTaskScope(scope: {
   boardTeamId: string;
   boardId: string;
   columnBoardId: string;
-  groupTeamId: string | null;
 }): void {
   if (scope.boardTeamId !== scope.teamId) {
     throw new Error("Task board must belong to the same team");
   }
   if (scope.columnBoardId !== scope.boardId) {
     throw new Error("Task column must belong to the same board");
-  }
-  if (scope.groupTeamId !== null && scope.groupTeamId !== scope.teamId) {
-    throw new Error("Task group must belong to the same team");
   }
 }

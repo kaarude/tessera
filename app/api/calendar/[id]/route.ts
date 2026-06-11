@@ -51,12 +51,6 @@ export const PATCH = withRoute<{ id: string }>(
     ) {
       return apiError(403, "Not a member of the target team");
     }
-    if (data.groupId) {
-      const group = await prisma.group.findUnique({ where: { id: data.groupId } });
-      if (!group || group.teamId !== targetTeamId) {
-        return apiError(400, "group/team mismatch");
-      }
-    }
     if (data.assignedToId !== undefined && data.assignedToId !== existing.assignedToId) {
       const permission = await hasPermission(
         user.id,
@@ -93,7 +87,6 @@ export const PATCH = withRoute<{ id: string }>(
         }),
         ...(data.isAllDay !== undefined && { isAllDay: data.isAllDay }),
         ...(data.teamId !== undefined && { teamId: data.teamId }),
-        ...(data.groupId !== undefined && { groupId: data.groupId }),
         ...(data.assignedToId !== undefined && { assignedToId: data.assignedToId }),
       },
     });

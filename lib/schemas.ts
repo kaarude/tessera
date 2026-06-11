@@ -49,9 +49,7 @@ const TASK_PERMS = [
   "tasks:move_columns",
   "tasks:reassign_users",
   "tasks:reassign_teams",
-  "tasks:move_groups",
   "tasks:view_team",
-  "tasks:view_group",
 ] as const;
 
 const PLATFORM_PERMS = [
@@ -61,20 +59,13 @@ const PLATFORM_PERMS = [
   "teams:create",
   "teams:edit",
   "teams:delete",
-  "groups:create",
-  "groups:edit",
-  "groups:delete",
   "roles:create",
   "roles:edit",
   "roles:delete",
   "admin:grant",
 ] as const;
 
-const AUDIT_PERMS = [
-  "audit:view_team",
-  "audit:view_group",
-  "audit:view_all",
-] as const;
+const AUDIT_PERMS = ["audit:view_team", "audit:view_all"] as const;
 
 export const ALL_PERMISSION_STRINGS = [
   ...PLATFORM_PERMS,
@@ -89,7 +80,6 @@ export const NoteCreateBody = z
     title: z.string().min(1).max(200),
     content: z.string().max(500_000).default(""),
     teamId: cuid.nullable().optional(),
-    groupId: cuid.nullable().optional(),
     isPrivate: z.boolean().optional(),
   })
   .strict();
@@ -100,7 +90,6 @@ export const NoteUpdateBody = z
     content: z.string().max(500_000).optional(),
     isPrivate: z.boolean().optional(),
     teamId: cuid.nullable().optional(),
-    groupId: cuid.nullable().optional(),
   })
   .strict();
 
@@ -112,7 +101,6 @@ export const TaskCreateBody = z
     dueDate: z.string().datetime().nullable().optional(),
     assigneeId: cuid.nullable().optional(),
     teamId: cuid,
-    groupId: cuid.nullable().optional(),
     boardId: cuid,
     columnId: cuid,
     position: z.number().int().min(0).default(0),
@@ -127,7 +115,6 @@ export const TaskUpdateBody = z
     dueDate: z.string().datetime().nullable().optional(),
     assigneeId: cuid.nullable().optional(),
     teamId: cuid.optional(),
-    groupId: cuid.nullable().optional(),
     boardId: cuid.optional(),
     columnId: cuid.optional(),
     position: z.number().int().min(0).optional(),
@@ -139,14 +126,6 @@ export const TeamCreateBody = z
   .object({
     name: z.string().min(1).max(100),
     description: z.string().max(2000).optional(),
-  })
-  .strict();
-
-export const GroupCreateBody = z
-  .object({
-    name: z.string().min(1).max(100),
-    description: z.string().max(2000).optional(),
-    teamId: cuid,
   })
   .strict();
 
@@ -192,7 +171,6 @@ export const CalendarCreateBody = z
     endDate: z.string().datetime().nullable().optional(),
     isAllDay: z.boolean().default(false),
     teamId: cuid.nullable().optional(),
-    groupId: cuid.nullable().optional(),
     assignedToId: cuid.nullable().optional(),
   })
   .strict()
@@ -209,7 +187,6 @@ export const CalendarUpdateBody = z
     endDate: z.string().datetime().nullable().optional(),
     isAllDay: z.boolean().optional(),
     teamId: cuid.nullable().optional(),
-    groupId: cuid.nullable().optional(),
     assignedToId: cuid.nullable().optional(),
   })
   .strict();

@@ -1,0 +1,87 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic:
+      - link "Skip to main content" [ref=e3] [cursor=pointer]:
+        - /url: "#main-content"
+      - complementary [ref=e4]:
+        - generic [ref=e5]:
+          - link "Tessera logo Tessera" [ref=e6] [cursor=pointer]:
+            - /url: /dashboard
+            - img "Tessera logo" [ref=e7]
+            - generic [ref=e12]: Tessera
+          - button "Collapse sidebar" [ref=e13]:
+            - img [ref=e14]
+        - navigation "Main navigation" [ref=e16]:
+          - list [ref=e17]:
+            - listitem [ref=e18]:
+              - link "Dashboard" [ref=e19] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e20]
+                - generic [ref=e25]: Dashboard
+            - listitem [ref=e26]:
+              - link "Notes" [ref=e27] [cursor=pointer]:
+                - /url: /notes
+                - img [ref=e28]
+                - generic [ref=e31]: Notes
+            - listitem [ref=e32]:
+              - link "Calendar" [ref=e33] [cursor=pointer]:
+                - /url: /calendar
+                - img [ref=e34]
+                - generic [ref=e36]: Calendar
+            - listitem [ref=e37]:
+              - link "Taskboard" [ref=e38] [cursor=pointer]:
+                - /url: /tasks
+                - img [ref=e39]
+                - generic [ref=e42]: Taskboard
+            - listitem [ref=e43]:
+              - link "Teams" [ref=e44] [cursor=pointer]:
+                - /url: /teams
+                - img [ref=e45]
+                - generic [ref=e50]: Teams
+            - listitem [ref=e51]:
+              - link "Groups" [ref=e52] [cursor=pointer]:
+                - /url: /groups
+                - img [ref=e53]
+                - generic [ref=e58]: Groups
+            - listitem [ref=e59]:
+              - link "Roles" [ref=e60] [cursor=pointer]:
+                - /url: /roles
+                - img [ref=e61]
+                - generic [ref=e63]: Roles
+            - listitem [ref=e64]:
+              - link "Audit Logs" [ref=e65] [cursor=pointer]:
+                - /url: /audit
+                - img [ref=e66]
+                - generic [ref=e69]: Audit Logs
+            - listitem [ref=e70]:
+              - link "Users" [ref=e71] [cursor=pointer]:
+                - /url: /users
+                - img [ref=e72]
+                - generic [ref=e77]: Users
+        - generic [ref=e78]:
+          - link "Settings" [ref=e79] [cursor=pointer]:
+            - /url: /settings
+            - img [ref=e80]
+            - generic [ref=e83]: Settings
+          - button "Logout" [ref=e84]:
+            - img [ref=e85]
+            - generic [ref=e88]: Logout
+    - generic [ref=e89]:
+      - banner [ref=e90]:
+        - generic [ref=e91]:
+          - button "Notifications, 0 unread" [ref=e93]:
+            - img [ref=e94]
+          - generic [ref=e97]:
+            - generic [ref=e98]: A
+            - generic [ref=e99]: Admin
+      - main [ref=e100]:
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - heading "Notes" [level=1] [ref=e105]
+            - button "New Note" [ref=e106]:
+              - img [ref=e107]
+              - text: New Note
+          - generic [ref=e108]:
+            - img [ref=e109]
+            - textbox "Search notes..." [ref=e112]
+  - alert [ref=e117]

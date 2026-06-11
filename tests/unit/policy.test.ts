@@ -201,7 +201,6 @@ describe("validateTaskScope", () => {
     boardTeamId: "team-1",
     boardId: "board-1",
     columnBoardId: "board-1",
-    groupTeamId: null,
   };
 
   it("accepts a consistent scope", () => {
@@ -212,9 +211,6 @@ describe("validateTaskScope", () => {
   });
   it("rejects a column from a different board", () => {
     expect(() => validateTaskScope({ ...ok, columnBoardId: "board-2" })).toThrow(/same board/i);
-  });
-  it("rejects a group in a different team", () => {
-    expect(() => validateTaskScope({ ...ok, groupTeamId: "team-2" })).toThrow(/same team/i);
   });
 });
 

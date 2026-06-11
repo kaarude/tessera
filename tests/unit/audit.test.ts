@@ -45,7 +45,6 @@ describe("logAudit", () => {
         entityType: "note",
         entityId: "note-1",
         teamId: "team-1",
-        groupId: undefined,
         metadata: {},
         beforeData: {},
         afterData: {},
@@ -53,24 +52,7 @@ describe("logAudit", () => {
     });
   });
 
-  it("passes groupId through when provided", async () => {
-    await logAudit({
-      actorId: "user-1",
-      action: "update",
-      entityType: "task",
-      entityId: "task-1",
-      teamId: "team-1",
-      groupId: "group-1",
-    });
-
-    expect(mocks.auditLogCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ groupId: "group-1" }),
-      }),
-    );
-  });
-
-  it("omits teamId and groupId when not provided (Prisma will store NULL)", async () => {
+  it("omits teamId when not provided (Prisma will store NULL)", async () => {
     await logAudit({
       actorId: "user-1",
       action: "login",
@@ -80,7 +62,6 @@ describe("logAudit", () => {
 
     const call = mocks.auditLogCreate.mock.calls[0]?.[0];
     expect(call.data.teamId).toBeUndefined();
-    expect(call.data.groupId).toBeUndefined();
   });
 
   it("serializes metadata to JSON", async () => {

@@ -22,13 +22,13 @@ product.
   team calendars, per-user assignment. Local-time-aware. No third-party
   calendar sync (yet).
 - **Drag-and-drop kanban.** Multiple boards per team, customisable columns,
-  right-click to reassign to a different user, team, or group. Task
+  right-click to reassign to a different user or team. Task
   permissions are honoured server-side.
 - **Custom roles per team.** Every permission — note, calendar, task, audit,
   platform — is a checkbox in a fully editable matrix. There are no hidden
   role tiers.
 - **Audit logs that mean something.** Every mutation is logged with the
-  actor, target, before/after state, and team/group context. Filterable by
+  actor, target, before/after state, and team context. Filterable by
   anything you'd want to filter by. Admin-only by default.
 - **Self-hostable in one command.** Postgres + MinIO + Tessera via
   `docker compose up`. No vendor lock-in. Bring your own S3 if you prefer.
@@ -144,14 +144,13 @@ checklist.
 ### Data model at a glance
 
 - `User` — has many `Note`, `Task`, `CalendarEntry`, `TeamMembership`, `UserRole`
-- `Team` — has many `Group`, `Role`, `Note`, `CalendarEntry`, `Task`, `TaskBoard`
-- `Group` — belongs to a `Team`, scopes `Note`/`CalendarEntry`/`Task`
+- `Team` — has many `Role`, `Note`, `CalendarEntry`, `Task`, `TaskBoard`
 - `Role` — has many `RolePermission`; granted to a `User` via `UserRole`
   scoped to a `Team` or platform-wide
 - `Note` — has many `NoteShare` (per-user or per-team) and `NoteAttachment`
 - `TaskBoard` — has many `TaskColumn`; `Task` belongs to a `Column` and a
   `Board`
-- `CalendarEntry` — owned by a `User`, optionally scoped to a `Team`/`Group`,
+- `CalendarEntry` — owned by a `User`, optionally scoped to a `Team`,
   optionally `assignedTo` a `User`
 - `AuditLog` — append-only; one row per mutation
 - `Notification` — in-app per-user; surfaced by the bell in the topbar and

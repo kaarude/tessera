@@ -43,7 +43,6 @@ model Team {
 
   owner       User             @relation("TeamOwner", fields: [ownerId], references: [id])
   memberships TeamMembership[]
-  groups      Group[]
   roles       Role[]
   notes       Note[]
   noteShares  NoteShare[]
@@ -63,21 +62,6 @@ model TeamMembership {
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([userId, teamId])
-}
-
-model Group {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  teamId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  team Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  notes Note[]
-  calendarEntries CalendarEntry[]
-  tasks Task[]
-  auditLogs AuditLog[]
 }
 
 model Role {
@@ -124,14 +108,12 @@ model Note {
   content   String   @db.Text
   ownerId   String
   teamId    String?
-  groupId   String?
   isPrivate Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   owner      User             @relation("NoteOwner", fields: [ownerId], references: [id])
   team       Team?            @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  group      Group?           @relation(fields: [groupId], references: [id], onDelete: Cascade)
   shares     NoteShare[]
   attachments NoteAttachment[]
 
@@ -177,14 +159,12 @@ model CalendarEntry {
   isAllDay    Boolean   @default(false)
   userId      String
   teamId      String?
-  groupId     String?
   assignedToId String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   user       User   @relation("CalendarOwner", fields: [userId], references: [id])
   team       Team?  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  group      Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
   assignedTo User?  @relation("CalendarAssignee", fields: [assignedToId], references: [id])
 
   @@index([startDate])
@@ -225,7 +205,6 @@ model Task {
   dueDate     DateTime?
   assigneeId  String?
   teamId      String
-  groupId     String?
   boardId     String
   columnId    String
   position    Int       @default(0)
@@ -235,7 +214,6 @@ model Task {
 
   assignee User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
   team     Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  group    Group?    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   board    TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
   column   TaskColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
   creator  User      @relation("TaskCreator", fields: [createdById], references: [id])
@@ -253,7 +231,6 @@ model AuditLog {
   entityType   String
   entityId     String
   teamId       String?
-  groupId      String?
   metadata     Json?
   beforeData   Json?
   afterData    Json?
@@ -261,11 +238,8 @@ model AuditLog {
 
   actor User  @relation("AuditActor", fields: [actorId], references: [id])
   team  Team? @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
   @@index([actorId])
   @@index([teamId])
-  @@index([groupId])
   @@index([createdAt])
   @@index([action])
 }

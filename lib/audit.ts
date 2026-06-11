@@ -7,7 +7,6 @@ export async function logAudit(args: {
   entityType: string;
   entityId: string;
   teamId?: string;
-  groupId?: string;
   metadata?: Record<string, unknown>;
   beforeData?: Record<string, unknown>;
   afterData?: Record<string, unknown>;
@@ -19,7 +18,6 @@ export async function logAudit(args: {
       entityType: args.entityType,
       entityId: args.entityId,
       teamId: args.teamId,
-      groupId: args.groupId,
       metadata: (args.metadata ?? {}) as Prisma.InputJsonValue,
       beforeData: (args.beforeData ?? {}) as Prisma.InputJsonValue,
       afterData: (args.afterData ?? {}) as Prisma.InputJsonValue,

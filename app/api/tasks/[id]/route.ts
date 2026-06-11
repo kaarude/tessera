@@ -96,22 +96,6 @@ export const PATCH = withRoute<{ id: string }>(
     ) {
       return apiError(403, "Not a member of the target team");
     }
-    if (data.groupId !== undefined && data.groupId !== existing.groupId) {
-      const perm = await hasPermission(
-        user.id,
-        "tasks:move_groups",
-        existing.teamId,
-      );
-      if (!perm && !user.isAdmin) {
-        return apiError(403, "Forbidden: tasks:move_groups required");
-      }
-    }
-    if (data.groupId) {
-      const group = await prisma.group.findUnique({ where: { id: data.groupId } });
-      if (!group || group.teamId !== targetTeamId) {
-        return apiError(400, "group/team mismatch");
-      }
-    }
     if (data.assigneeId) {
       const membership = await prisma.teamMembership.findUnique({
         where: {
@@ -132,7 +116,6 @@ export const PATCH = withRoute<{ id: string }>(
         }),
         ...(data.assigneeId !== undefined && { assigneeId: data.assigneeId }),
         ...(data.teamId !== undefined && { teamId: data.teamId }),
-        ...(data.groupId !== undefined && { groupId: data.groupId }),
         ...(data.boardId !== undefined && { boardId: data.boardId }),
         ...(data.columnId !== undefined && { columnId: data.columnId }),
         ...(data.position !== undefined && { position: data.position }),
@@ -146,7 +129,6 @@ export const PATCH = withRoute<{ id: string }>(
       entityType: "task",
       entityId: task.id,
       teamId: task.teamId,
-      groupId: task.groupId ?? undefined,
       metadata: { title: task.title, columnId: task.columnId },
     });
 
@@ -180,7 +162,6 @@ export const DELETE = withRoute<{ id: string }>(
       entityType: "task",
       entityId: id,
       teamId: existing.teamId,
-      groupId: existing.groupId ?? undefined,
       metadata: { title: existing.title },
     });
     return NextResponse.json({ success: true });

@@ -1,0 +1,24 @@
+[      92ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/auth/me:0
+[      92ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/notes?teamId=:0
+[      92ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/calendar?teamId=&start=2026-06-11T21:54:50.974Z&end=2026-06-18T21:54:50.974Z:0
+[      92ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/tasks?teamId=:0
+[      92ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3000/api/notifications:0
+[     204ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/login:0
+[   18712ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/notes?teamId=:0
+[   18712ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/calendar?teamId=&start=2026-06-11T21:55:09.589Z&end=2026-06-18T21:55:09.589Z:0
+[   18712ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/tasks?teamId=:0
+[   19735ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/calendar?teamId=&start=2026-06-11T21:55:10.632Z&end=2026-06-18T21:55:10.632Z:0
+[   19736ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/notes?teamId=:0
+[   19736ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/tasks?teamId=:0
+[   63485ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/notes?teamId=:0
+[   63485ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/calendar?teamId=&start=2026-06-11T21:55:54.364Z&end=2026-06-18T21:55:54.364Z:0
+[   63485ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/tasks?teamId=:0
+[   64495ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/calendar?teamId=&start=2026-06-11T21:55:55.395Z&end=2026-06-18T21:55:55.395Z:0
+[   64496ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/notes?teamId=:0
+[   64497ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/tasks?teamId=:0
+[   70841ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/notes?teamId=:0
+[   70841ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/calendar?teamId=&start=2026-06-11T21:56:01.723Z&end=2026-06-18T21:56:01.723Z:0
+[   70841ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/tasks?teamId=:0
+[   71858ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/calendar?teamId=&start=2026-06-11T21:56:02.753Z&end=2026-06-18T21:56:02.753Z:0
+[   71858ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/tasks?teamId=:0
+[   71859ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/notes?teamId=:0
