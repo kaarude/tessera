@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback } from "react";
+import { Suspense, use, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -181,6 +181,18 @@ function BoardColumn({
 }
 
 export default function TasksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <TasksPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+function TasksPageContent({
   searchParams,
 }: {
   searchParams: Promise<{ create?: string }>;

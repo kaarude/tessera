@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { Suspense, use, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
 import {
@@ -25,6 +25,18 @@ type ViewMode = "month" | "week" | "day";
 import { toLocalInput } from "@/lib/datetime";
 
 export default function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <CalendarPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+function CalendarPageContent({
   searchParams,
 }: {
   searchParams: Promise<{ create?: string }>;

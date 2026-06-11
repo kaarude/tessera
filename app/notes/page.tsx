@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { Suspense, use, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
@@ -21,6 +21,18 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function NotesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <NotesPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+function NotesPageContent({
   searchParams,
 }: {
   searchParams: Promise<{ create?: string }>;
