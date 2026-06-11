@@ -7,7 +7,7 @@ import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
 
 const Body = z
   .object({
-    email: z.string().email().max(200),
+    email: z.string().min(1).max(200),
     password: z.string().min(1).max(200),
   })
   .strict();
@@ -123,6 +123,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

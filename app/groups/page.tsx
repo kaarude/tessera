@@ -56,7 +56,9 @@ export default function GroupsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Groups</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Groups
+            </h1>
           </div>
           <button
             onClick={() => setShowCreate(true)}
@@ -68,10 +70,13 @@ export default function GroupsPage() {
         </div>
 
         {showCreate && (
-          <div className="rounded-xl border border-border bg-card p-5 shadow-lg">
+          <div className="rounded-xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-foreground">Create Group</h3>
-              <button onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setShowCreate(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -79,13 +84,17 @@ export default function GroupsPage() {
               <input
                 type="text"
                 value={newGroup.name}
-                onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
+                onChange={(e) =>
+                  setNewGroup({ ...newGroup, name: e.target.value })
+                }
                 placeholder="Group name"
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
               <textarea
                 value={newGroup.description}
-                onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
+                onChange={(e) =>
+                  setNewGroup({ ...newGroup, description: e.target.value })
+                }
                 placeholder="Description"
                 rows={2}
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
@@ -97,12 +106,18 @@ export default function GroupsPage() {
               >
                 <option value="">Select team</option>
                 {teams?.map((team: any) => (
-                  <option key={team.id} value={team.id}>{team.name}</option>
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
                 ))}
               </select>
               <button
-                onClick={() => createMutation.mutate({ ...newGroup, teamId: currentTeamId })}
-                disabled={!newGroup.name || !currentTeamId || createMutation.isPending}
+                onClick={() =>
+                  createMutation.mutate({ ...newGroup, teamId: currentTeamId })
+                }
+                disabled={
+                  !newGroup.name || !currentTeamId || createMutation.isPending
+                }
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {createMutation.isPending ? "Creating..." : "Create Group"}
@@ -120,17 +135,26 @@ export default function GroupsPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {groups?.map((group: any) => (
-              <div key={group.id} className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30">
+              <div
+                key={group.id}
+                className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30"
+              >
                 <div className="mb-3 flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <FolderTree size={18} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground">{group.name}</h3>
-                    <p className="text-xs text-muted-foreground">{group.team?.name}</p>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {group.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      {group.team?.name}
+                    </p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">{group.description || "No description"}</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {group.description || "No description"}
+                </p>
               </div>
             ))}
           </div>
@@ -139,7 +163,9 @@ export default function GroupsPage() {
         {!isLoading && !groups?.length && (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20">
             <FolderTree size={40} className="mb-3 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">No groups yet</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              No groups yet
+            </p>
             <button
               onClick={() => setShowCreate(true)}
               className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"

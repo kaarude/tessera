@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { Logo } from "./logo";
+import { useEffect, useRef } from "react";
 
 const mainNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -51,9 +53,41 @@ export function Sidebar() {
 
   const isAdmin = !!me?.isAdmin;
 
-  const navItems = isAdmin
-    ? [...mainNavItems, ...adminNavItems]
-    : mainNavItems;
+  const navItems = isAdmin ? [...mainNavItems, ...adminNavItems] : mainNavItems;
+  const navRef = useRef<HTMLUListElement>(null);
+
+  useEffect(() => {
+    const list = navRef.current;
+    if (!list) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const focusable = Array.from(
+        list!.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
+      ).filter((el) => el.offsetParent !== null);
+
+      const idx = focusable.indexOf(document.activeElement as HTMLElement);
+      if (idx === -1) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = focusable[idx + 1] || focusable[0];
+        next?.focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const prev = focusable[idx - 1] || focusable[focusable.length - 1];
+        prev?.focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        focusable[0]?.focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        focusable[focusable.length - 1]?.focus();
+      }
+    }
+
+    list.addEventListener("keydown", handleKeyDown);
+    return () => list.removeEventListener("keydown", handleKeyDown);
+  }, [navItems.length]);
 
   return (
     <>
@@ -67,7 +101,7 @@ export function Sidebar() {
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border bg-card transition-all duration-300 ease-out",
-          sidebarOpen ? "w-64" : "w-16"
+          sidebarOpen ? "w-64" : "w-16",
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
@@ -75,12 +109,10 @@ export function Sidebar() {
             href="/dashboard"
             className={cn(
               "flex items-center gap-2.5 transition-opacity duration-200",
-              sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none w-0"
+              sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none w-0",
             )}
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-              M
-            </div>
+            <Logo size={32} className="text-foreground" />
             <span className="font-semibold tracking-tight text-foreground">
               Tessera
             </span>
@@ -90,17 +122,25 @@ export function Sidebar() {
             aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             className={cn(
               "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-              !sidebarOpen && "mx-auto"
+              !sidebarOpen && "mx-auto",
             )}
           >
-            {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            {sidebarOpen ? (
+              <ChevronLeft size={16} />
+            ) : (
+              <ChevronRight size={16} />
+            )}
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 scrollbar-thin" aria-label="Main navigation">
-          <ul className="space-y-1 px-2">
+        <nav
+          className="flex-1 overflow-y-auto py-4 scrollbar-thin"
+          aria-label="Main navigation"
+        >
+          <ul className="space-y-1 px-2" ref={navRef}>
             {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <li key={item.href}>
                   <Link
@@ -108,14 +148,19 @@ export function Sidebar() {
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                       isActive
-                        ? "bg-primary/10 text-primary"
+                        ? "bg-primary/10 text-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                      !sidebarOpen && "justify-center px-2"
+                      !sidebarOpen && "justify-center px-2",
                     )}
                     title={sidebarOpen ? undefined : item.label}
+                    aria-label={sidebarOpen ? undefined : item.label}
                     aria-current={isActive ? "page" : undefined}
                   >
-                    <item.icon size={18} className={cn("shrink-0", isActive && "text-primary")} aria-hidden="true" />
+                    <item.icon
+                      size={18}
+                      className={cn("shrink-0", isActive && "text-foreground")}
+                      aria-hidden="true"
+                    />
                     {sidebarOpen && (
                       <span className="flex-1">{item.label}</span>
                     )}
@@ -131,9 +176,10 @@ export function Sidebar() {
             href="/settings"
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-              !sidebarOpen && "justify-center px-2"
+              !sidebarOpen && "justify-center px-2",
             )}
             title={!sidebarOpen ? "Settings" : undefined}
+            aria-label={!sidebarOpen ? "Settings" : undefined}
           >
             <Settings size={18} aria-hidden="true" />
             {sidebarOpen && <span>Settings</span>}
@@ -145,7 +191,7 @@ export function Sidebar() {
             }}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-              !sidebarOpen && "justify-center px-2"
+              !sidebarOpen && "justify-center px-2",
             )}
             title={!sidebarOpen ? "Logout" : undefined}
             aria-label="Logout"

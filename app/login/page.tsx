@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Zap, Eye, EyeOff, Lock } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { toast } from "react-hot-toast";
 
 export default function LoginPage() {
@@ -40,7 +41,9 @@ export default function LoginPage() {
       }
 
       toast.success("Welcome back!");
-      router.push("/dashboard");
+      // Use window.location for full page navigation to ensure
+      // the new session cookie is sent with the first request
+      window.location.href = "/dashboard";
     } catch {
       toast.error("Something went wrong");
     } finally {
@@ -88,12 +91,12 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-            <Zap size={24} />
+          <div className="flex items-center gap-3">
+            <Logo size={36} className="text-foreground" />
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Tessera
+            </h1>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Tessera
-          </h1>
           <p className="text-sm text-muted-foreground">
             Team productivity platform
           </p>
@@ -101,10 +104,12 @@ export default function LoginPage() {
 
         {mustChange ? (
           <form onSubmit={handleChangePassword} className="space-y-4">
-            <div className="rounded-xl border border-border bg-card p-6 shadow-lg">
+            <div className="rounded-xl border border-border bg-card p-6">
               <div className="mb-4 flex items-center gap-2 text-primary">
                 <Lock size={18} />
-                <span className="text-sm font-semibold">Change Required Password</span>
+                <span className="text-sm font-semibold">
+                  Change Required Password
+                </span>
               </div>
               <div className="space-y-4">
                 <div>
@@ -123,7 +128,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  className="flex w-full items-center justify-center rounded-lg bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
                 >
                   {loading ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
@@ -136,27 +141,35 @@ export default function LoginPage() {
           </form>
         ) : (
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="rounded-xl border border-border bg-card p-6 shadow-lg">
+            <div className="rounded-xl border border-border bg-card p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">
-                    Email
+                  <label
+                    htmlFor="username"
+                    className="mb-1.5 block text-sm font-medium text-foreground"
+                  >
+                    Username or email
                   </label>
                   <input
-                    type="email"
+                    id="username"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-lg border border-border bg-muted px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
-                    placeholder="admin@tessera.app"
+                    placeholder="admin"
                     required
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="password"
+                    className="mb-1.5 block text-sm font-medium text-foreground"
+                  >
                     Password
                   </label>
                   <div className="relative">
                     <input
+                      id="password"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -176,7 +189,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  className="flex w-full items-center justify-center rounded-lg bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
                 >
                   {loading ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />

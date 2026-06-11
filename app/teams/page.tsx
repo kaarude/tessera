@@ -46,7 +46,9 @@ export default function TeamsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Teams</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Teams
+            </h1>
           </div>
           <button
             onClick={() => setShowCreate(true)}
@@ -58,10 +60,13 @@ export default function TeamsPage() {
         </div>
 
         {showCreate && (
-          <div className="rounded-xl border border-border bg-card p-5 shadow-lg">
+          <div className="rounded-xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-foreground">Create Team</h3>
-              <button onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setShowCreate(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -69,13 +74,17 @@ export default function TeamsPage() {
               <input
                 type="text"
                 value={newTeam.name}
-                onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
+                onChange={(e) =>
+                  setNewTeam({ ...newTeam, name: e.target.value })
+                }
                 placeholder="Team name"
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
               <textarea
                 value={newTeam.description}
-                onChange={(e) => setNewTeam({ ...newTeam, description: e.target.value })}
+                onChange={(e) =>
+                  setNewTeam({ ...newTeam, description: e.target.value })
+                }
                 placeholder="Description"
                 rows={3}
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
@@ -105,7 +114,9 @@ export default function TeamsPage() {
                 onClick={() => setCurrentTeamId(team.id)}
                 className={
                   "cursor-pointer rounded-xl border bg-card p-5 transition-colors hover:border-primary/30 " +
-                  (currentTeamId === team.id ? "border-primary/50 bg-primary/5" : "border-border")
+                  (currentTeamId === team.id
+                    ? "border-primary/50 bg-primary/5"
+                    : "border-border")
                 }
               >
                 <div className="mb-3 flex items-center justify-between">
@@ -118,8 +129,12 @@ export default function TeamsPage() {
                     </span>
                   )}
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">{team.name}</h3>
-                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{team.description || "No description"}</p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {team.name}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                  {team.description || "No description"}
+                </p>
                 <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield size={12} />
                   <span>Click to switch context</span>
@@ -132,7 +147,9 @@ export default function TeamsPage() {
         {!isLoading && !teams?.length && (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20">
             <Users size={40} className="mb-3 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">No teams yet</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              No teams yet
+            </p>
             <button
               onClick={() => setShowCreate(true)}
               className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"

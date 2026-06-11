@@ -2,13 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  X,
-  Trash2,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
 import {
   format,
   startOfMonth,
@@ -58,11 +52,27 @@ export default function CalendarPage() {
       } else {
         // Day view — fresh Date instances to avoid mutating React state.
         const d = new Date(currentDate);
-        start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-        end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+        start = new Date(
+          d.getFullYear(),
+          d.getMonth(),
+          d.getDate(),
+          0,
+          0,
+          0,
+          0,
+        );
+        end = new Date(
+          d.getFullYear(),
+          d.getMonth(),
+          d.getDate(),
+          23,
+          59,
+          59,
+          999,
+        );
       }
       const res = await fetch(
-        `/api/calendar?teamId=${currentTeamId || ""}&start=${start.toISOString()}&end=${end.toISOString()}`
+        `/api/calendar?teamId=${currentTeamId || ""}&start=${start.toISOString()}&end=${end.toISOString()}`,
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
@@ -132,7 +142,9 @@ export default function CalendarPage() {
   }, [currentDate, viewMode]);
 
   function getEventsForDay(day: Date) {
-    return events?.filter((e: any) => isSameDay(new Date(e.startDate), day)) || [];
+    return (
+      events?.filter((e: any) => isSameDay(new Date(e.startDate), day)) || []
+    );
   }
 
   return (
@@ -141,8 +153,12 @@ export default function CalendarPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Calendar</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Schedule and manage team events.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Calendar
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Schedule and manage team events.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-lg border border-border bg-muted p-1">
@@ -152,7 +168,9 @@ export default function CalendarPage() {
                   onClick={() => setViewMode(v)}
                   className={cn(
                     "rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors",
-                    viewMode === v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    viewMode === v
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {v}
@@ -191,7 +209,10 @@ export default function CalendarPage() {
               <ChevronLeft size={16} />
             </button>
             <h2 className="text-lg font-semibold text-foreground min-w-[140px] text-center">
-              {format(currentDate, viewMode === "day" ? "MMMM d, yyyy" : "MMMM yyyy")}
+              {format(
+                currentDate,
+                viewMode === "day" ? "MMMM d, yyyy" : "MMMM yyyy",
+              )}
             </h2>
             <button
               onClick={() => {
@@ -213,7 +234,10 @@ export default function CalendarPage() {
           <div className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="grid grid-cols-7 border-b border-border">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="py-2 text-center text-xs font-semibold text-muted-foreground uppercase">
+                <div
+                  key={day}
+                  className="py-2 text-center text-xs font-semibold text-muted-foreground uppercase"
+                >
                   {day}
                 </div>
               ))}
@@ -248,14 +272,18 @@ export default function CalendarPage() {
                     }}
                     className={cn(
                       "min-h-[100px] border-b border-r border-border p-2 transition-colors hover:bg-muted/50 cursor-pointer",
-                      !isSameMonth(day, currentDate) && viewMode === "month" && "bg-muted/30 opacity-50"
+                      !isSameMonth(day, currentDate) &&
+                        viewMode === "month" &&
+                        "bg-muted/30 opacity-50",
                     )}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span
                         className={cn(
                           "text-xs font-medium",
-                          isToday(day) ? "flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground" : "text-foreground"
+                          isToday(day)
+                            ? "flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                            : "text-foreground",
                         )}
                       >
                         {format(day, "d")}
@@ -271,14 +299,18 @@ export default function CalendarPage() {
                           }}
                           className={cn(
                             "block w-full truncate rounded px-1.5 py-0.5 text-[10px] font-medium text-left",
-                            event.isAllDay ? "bg-primary/20 text-primary" : "bg-muted text-foreground"
+                            event.isAllDay
+                              ? "bg-primary/20 text-primary"
+                              : "bg-muted text-foreground",
                           )}
                         >
                           {event.title}
                         </button>
                       ))}
                       {dayEvents.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">+{dayEvents.length - 3} more</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          +{dayEvents.length - 3} more
+                        </span>
                       )}
                     </div>
                   </div>
@@ -301,18 +333,30 @@ export default function CalendarPage() {
                   onClick={() => setSelectedEvent(event)}
                   className="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted"
                 >
-                  <div className={cn("h-2 w-2 shrink-0 rounded-full", event.isAllDay ? "bg-primary" : "bg-muted-foreground")} />
+                  <div
+                    className={cn(
+                      "h-2 w-2 shrink-0 rounded-full",
+                      event.isAllDay ? "bg-primary" : "bg-muted-foreground",
+                    )}
+                  />
                   <div>
-                    <p className="text-sm font-medium text-foreground">{event.title}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {event.title}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      {event.isAllDay ? "All day" : format(new Date(event.startDate), "h:mm a")}
-                      {event.endDate && ` - ${format(new Date(event.endDate), "h:mm a")}`}
+                      {event.isAllDay
+                        ? "All day"
+                        : format(new Date(event.startDate), "h:mm a")}
+                      {event.endDate &&
+                        ` - ${format(new Date(event.endDate), "h:mm a")}`}
                     </p>
                   </div>
                 </button>
               ))}
               {!getEventsForDay(currentDate).length && (
-                <p className="text-center text-sm text-muted-foreground py-8">No events for this day</p>
+                <p className="text-center text-sm text-muted-foreground py-8">
+                  No events for this day
+                </p>
               )}
             </div>
           </div>
@@ -321,12 +365,18 @@ export default function CalendarPage() {
         {/* Create Modal */}
         {showCreate && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl">
+            <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">
                   {selectedEvent ? "Edit Event" : "New Event"}
                 </h3>
-                <button onClick={() => { setShowCreate(false); setSelectedEvent(null); }} className="text-muted-foreground hover:text-foreground">
+                <button
+                  onClick={() => {
+                    setShowCreate(false);
+                    setSelectedEvent(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   <X size={20} />
                 </button>
               </div>
@@ -334,33 +384,78 @@ export default function CalendarPage() {
                 <input
                   type="text"
                   value={selectedEvent?.title || newEvent.title}
-                  onChange={(e) => selectedEvent ? setSelectedEvent({ ...selectedEvent, title: e.target.value }) : setNewEvent({ ...newEvent, title: e.target.value })}
+                  onChange={(e) =>
+                    selectedEvent
+                      ? setSelectedEvent({
+                          ...selectedEvent,
+                          title: e.target.value,
+                        })
+                      : setNewEvent({ ...newEvent, title: e.target.value })
+                  }
                   placeholder="Event title"
                   className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
                 <textarea
                   value={selectedEvent?.description || newEvent.description}
-                  onChange={(e) => selectedEvent ? setSelectedEvent({ ...selectedEvent, description: e.target.value }) : setNewEvent({ ...newEvent, description: e.target.value })}
+                  onChange={(e) =>
+                    selectedEvent
+                      ? setSelectedEvent({
+                          ...selectedEvent,
+                          description: e.target.value,
+                        })
+                      : setNewEvent({
+                          ...newEvent,
+                          description: e.target.value,
+                        })
+                  }
                   placeholder="Description"
                   rows={3}
                   className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Start</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Start
+                    </label>
                     <input
                       type="datetime-local"
-                      value={toLocalInput(selectedEvent?.startDate ?? newEvent.startDate)}
-                      onChange={(e) => selectedEvent ? setSelectedEvent({ ...selectedEvent, startDate: e.target.value }) : setNewEvent({ ...newEvent, startDate: e.target.value })}
+                      value={toLocalInput(
+                        selectedEvent?.startDate ?? newEvent.startDate,
+                      )}
+                      onChange={(e) =>
+                        selectedEvent
+                          ? setSelectedEvent({
+                              ...selectedEvent,
+                              startDate: e.target.value,
+                            })
+                          : setNewEvent({
+                              ...newEvent,
+                              startDate: e.target.value,
+                            })
+                      }
                       className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">End</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      End
+                    </label>
                     <input
                       type="datetime-local"
-                      value={toLocalInput(selectedEvent?.endDate ?? newEvent.endDate)}
-                      onChange={(e) => selectedEvent ? setSelectedEvent({ ...selectedEvent, endDate: e.target.value }) : setNewEvent({ ...newEvent, endDate: e.target.value })}
+                      value={toLocalInput(
+                        selectedEvent?.endDate ?? newEvent.endDate,
+                      )}
+                      onChange={(e) =>
+                        selectedEvent
+                          ? setSelectedEvent({
+                              ...selectedEvent,
+                              endDate: e.target.value,
+                            })
+                          : setNewEvent({
+                              ...newEvent,
+                              endDate: e.target.value,
+                            })
+                      }
                       className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                     />
                   </div>
@@ -370,10 +465,22 @@ export default function CalendarPage() {
                     type="checkbox"
                     id="allDay"
                     checked={selectedEvent?.isAllDay || newEvent.isAllDay}
-                    onChange={(e) => selectedEvent ? setSelectedEvent({ ...selectedEvent, isAllDay: e.target.checked }) : setNewEvent({ ...newEvent, isAllDay: e.target.checked })}
+                    onChange={(e) =>
+                      selectedEvent
+                        ? setSelectedEvent({
+                            ...selectedEvent,
+                            isAllDay: e.target.checked,
+                          })
+                        : setNewEvent({
+                            ...newEvent,
+                            isAllDay: e.target.checked,
+                          })
+                    }
                     className="rounded border-border text-primary"
                   />
-                  <label htmlFor="allDay" className="text-sm text-foreground">All day</label>
+                  <label htmlFor="allDay" className="text-sm text-foreground">
+                    All day
+                  </label>
                 </div>
                 <div className="flex gap-2">
                   {selectedEvent ? (
@@ -427,10 +534,16 @@ export default function CalendarPage() {
                           teamId: currentTeamId,
                         });
                       }}
-                      disabled={!newEvent.title || !newEvent.startDate || createMutation.isPending}
+                      disabled={
+                        !newEvent.title ||
+                        !newEvent.startDate ||
+                        createMutation.isPending
+                      }
                       className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                     >
-                      {createMutation.isPending ? "Creating..." : "Create Event"}
+                      {createMutation.isPending
+                        ? "Creating..."
+                        : "Create Event"}
                     </button>
                   )}
                 </div>

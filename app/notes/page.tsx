@@ -50,8 +50,13 @@ export default function NotesPage() {
       if (!res.ok) throw new Error("Failed to create note");
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    onSuccess: (newNote) => {
+      // Manually update the query cache to immediately show the new note
+      // This avoids issues with query key matching in invalidation
+      queryClient.setQueryData(
+        ["notes", currentTeamId, search],
+        (old: any[]) => (old ? [newNote, ...old] : [newNote]),
+      );
       setShowCreate(false);
       setNewTitle("");
       setNewContent("");
@@ -66,7 +71,7 @@ export default function NotesPage() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["notes"], exact: false });
       toast.success("Note deleted");
     },
   });

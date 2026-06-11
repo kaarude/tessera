@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-11T22:45:00Z",
+  "title": "Design System: Tessera",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Deep Charcoal",
+        "canonical": "oklch(16% 0.008 45)",
+        "tonalRamp": [
+          "oklch(8% 0.008 45)",
+          "oklch(12% 0.008 45)",
+          "oklch(16% 0.008 45)",
+          "oklch(21% 0.008 45)",
+          "oklch(26% 0.008 45)",
+          "oklch(32% 0.008 45)",
+          "oklch(40% 0.008 45)",
+          "oklch(50% 0.008 45)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Warm White",
+        "canonical": "oklch(95% 0.005 50)",
+        "tonalRamp": [
+          "oklch(20% 0.005 50)",
+          "oklch(35% 0.005 50)",
+          "oklch(50% 0.005 50)",
+          "oklch(62% 0.005 50)",
+          "oklch(75% 0.005 50)",
+          "oklch(85% 0.005 50)",
+          "oklch(92% 0.005 50)",
+          "oklch(95% 0.005 50)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface Charcoal",
+        "canonical": "oklch(21% 0.008 45)",
+        "tonalRamp": [
+          "oklch(8% 0.008 45)",
+          "oklch(12% 0.008 45)",
+          "oklch(16% 0.008 45)",
+          "oklch(21% 0.008 45)",
+          "oklch(26% 0.008 45)",
+          "oklch(32% 0.008 45)",
+          "oklch(40% 0.008 45)",
+          "oklch(50% 0.008 45)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Muted Amber",
+        "canonical": "oklch(70% 0.08 55)",
+        "tonalRamp": [
+          "oklch(30% 0.08 55)",
+          "oklch(40% 0.08 55)",
+          "oklch(50% 0.08 55)",
+          "oklch(60% 0.08 55)",
+          "oklch(70% 0.08 55)",
+          "oklch(78% 0.08 55)",
+          "oklch(86% 0.08 55)",
+          "oklch(94% 0.08 55)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Warm Grey",
+        "canonical": "oklch(62% 0.012 50)",
+        "tonalRamp": [
+          "oklch(20% 0.012 50)",
+          "oklch(30% 0.012 50)",
+          "oklch(40% 0.012 50)",
+          "oklch(50% 0.012 50)",
+          "oklch(62% 0.012 50)",
+          "oklch(72% 0.012 50)",
+          "oklch(82% 0.012 50)",
+          "oklch(90% 0.012 50)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles and hero headings. Max one per view."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headers, card titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Form labels, sub-headings, list titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Paragraphs, descriptions, prose. Capped at 70ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badges, meta text, timestamps, small UI labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "none",
+        "value": "none",
+        "purpose": "Default state for cards, panels, and containers."
+      },
+      {
+        "name": "ambient-hover",
+        "value": "0 2px 8px rgba(0, 0, 0, 0.06)",
+        "purpose": "Optional, extremely subtle lift on interactive cards when hovered."
+      },
+      {
+        "name": "warm-glow",
+        "value": "0 0 16px rgba(191, 160, 110, 0.10), 0 0 4px rgba(191, 160, 110, 0.06)",
+        "purpose": "Primary elevation language. Focused inputs, active nav items, hovered primary buttons."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px rgba(191, 160, 110, 0.15)",
+        "purpose": "Keyboard focus. Warm halo, not a harsh outline."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for state transitions. 150ms duration."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0, 0, 0.2, 1)",
+        "purpose": "Quick settle for dismissals and exits."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main call-to-action. Neutral at rest, warm on hover via glow and background shift.",
+      "html": "<button class=\"ds-btn-primary\">Save Changes</button>",
+      "css": ".ds-btn-primary { background: #272522; color: #f0eeeb; padding: 10px 16px; font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 0.9375rem; font-weight: 500; border: none; border-radius: 10px; cursor: pointer; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: #bfa06e; color: #161514; box-shadow: 0 0 16px rgba(191, 160, 110, 0.10), 0 0 4px rgba(191, 160, 110, 0.06); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(191, 160, 110, 0.15); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Subdued actions. Transparent with subtle border; warm tint on hover.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: #f0eeeb; padding: 10px 16px; font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 0.9375rem; font-weight: 500; border: 1px solid #34322f; border-radius: 10px; cursor: pointer; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-secondary:hover { background: rgba(191, 160, 110, 0.06); border-color: rgba(191, 160, 110, 0.20); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(191, 160, 110, 0.15); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat container with tonal background and subtle border. No shadow at rest.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Project Notes</h3><p class=\"ds-card-body\">Team notes and shared documents in one place.</p></div>",
+      "css": ".ds-card { background: #1f1d1b; color: #f0eeeb; border: 1px solid #34322f; border-radius: 12px; padding: 16px; font-family: Inter, system-ui, -apple-system, sans-serif; } .ds-card-title { font-size: 1.125rem; font-weight: 500; margin: 0 0 8px 0; line-height: 1.4; } .ds-card-body { font-size: 0.9375rem; font-weight: 400; color: #96938e; margin: 0; line-height: 1.6; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field with warm glow focus ring. No harsh outline.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Enter a task title…\" />",
+      "css": ".ds-input { background: #1f1d1b; color: #f0eeeb; padding: 10px 12px; font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 0.9375rem; font-weight: 400; border: 1px solid #34322f; border-radius: 10px; outline: none; transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: #96938e; } .ds-input:focus { border-color: rgba(191, 160, 110, 0.40); box-shadow: 0 0 0 3px rgba(191, 160, 110, 0.15); }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Sidebar navigation item. Active state uses faint warm tint and a micro-indicator.",
+      "html": "<a href=\"#\" class=\"ds-nav-item ds-nav-item--active\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect></svg><span>Dashboard</span></a>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 0.9375rem; font-weight: 500; color: #96938e; text-decoration: none; border-radius: 6px; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); position: relative; } .ds-nav-item:hover { background: rgba(191, 160, 110, 0.04); color: #f0eeeb; } .ds-nav-item--active { background: rgba(191, 160, 110, 0.08); color: #f0eeeb; } .ds-nav-item--active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 16px; background: #bfa06e; border-radius: 0 2px 2px 0; } .ds-nav-item svg { flex-shrink: 0; }"
+    },
+    {
+      "name": "Chip / Tag",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Small label for categories, filters, or statuses. No borders.",
+      "html": "<span class=\"ds-chip\">Team Alpha</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; padding: 4px 10px; font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 0.8125rem; font-weight: 500; color: #f0eeeb; background: #34322f; border-radius: 6px; letter-spacing: 0.01em; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Workshop",
+    "overview": "Tessera is a tool people run on their own servers. The interface should feel like walking into a well-kept workshop: everything has a place, nothing shouts for attention, and the warmth comes from use, not decoration. The visual system is built on a near-monochrome foundation. Warmth exists only as a whisper: a muted amber-orange that appears almost exclusively as ambient glow and micro-indicators.",
+    "keyCharacteristics": [
+      "Neutral-first: every surface begins as greyscale; warmth must be invited",
+      "Flat by default: depth comes from tonal separation, not drop shadows",
+      "Glow as language: the accent color speaks through box-shadow, not background-fill",
+      "Calm density: comfortable spacing, generous whitespace, no visual shouting",
+      "Earned familiarity: components behave predictably, consistently, and quietly"
+    ],
+    "rules": [
+      {
+        "name": "The Whisper Rule",
+        "body": "The accent color may occupy no more than 5% of any viewport at rest. Its presence must be ambient — a glow, a faint tint, a tiny indicator — never a dominant solid.",
+        "section": "colors"
+      },
+      {
+        "name": "The Neutral Floor Rule",
+        "body": "Every surface starts neutral. Warmth must be invited by state (hover, focus, active) or by a deliberate design choice, never inherited from the base palette. No warm-tinted body backgrounds in either mode.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Do not introduce a second font family. The tool should disappear into the task, and type contrast draws attention that belongs to the content.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest. Shadows appear only as a response to state (hover, focus, active). Do not pair a border with a soft wide shadow on the same element — pick one.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the accent exclusively as glow, micro-indicators, and faint tints. Solid fills are the exception, not the rule.",
+      "Do keep both dark and light mode visually consistent in proportion — the accent whisper should be equally quiet in both.",
+      "Do use tonal separation (bg → surface → elevated) to create hierarchy before reaching for shadows.",
+      "Do maintain 4.5:1 minimum contrast for all body text and placeholders.",
+      "Do respect prefers-reduced-motion. Transitions become instant; glow becomes solid state change."
+    ],
+    "donts": [
+      "Don't use the accent as a large solid fill (buttons, hero backgrounds, card headers). The Whisper Rule prohibits this.",
+      "Don't pair a 1px border with a soft wide shadow (blur ≥ 16px) on the same element. Pick one.",
+      "Don't use border-radius larger than 16px on cards or sections. Full-pill is reserved for tags and filter chips.",
+      "Don't use gradient text (background-clip: text). Decorative, never meaningful. Use weight or size for emphasis.",
+      "Don't use side-stripe borders (thick colored border-left on cards, callouts, or alerts). Rewrite with background tints or leading icons.",
+      "Don't use glassmorphism as a default. Blurs and glass cards are rare and purposeful, or nothing.",
+      "Don't add tiny uppercase tracked eyebrows above every section.",
+      "Don't use numbered section markers (01 / 02 / 03) as default scaffolding.",
+      "Don't create a cyberpunk or neon aesthetic. No high-saturation blues, purples, or glow effects.",
+      "Don't ship a near-white warm-tinted background that reads as cream, sand, or parchment in light mode.",
+      "Don't use display fonts in UI labels, buttons, or data. Inter carries everything.",
+      "Don't animate layout properties (width, height, top, left). Use transform and opacity only."
+    ]
+  }
+}

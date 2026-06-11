@@ -7,7 +7,7 @@ export default function NotFound() {
         <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
           404
         </p>
-        <h1 className="mt-1 text-2xl font-semibold text-foreground">
+        <h1 className="mt-1 text-3xl font-semibold text-foreground">
           Page not found
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -15,7 +15,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          className="mt-6 inline-flex rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
         >
           Back to dashboard
         </Link>

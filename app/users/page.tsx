@@ -54,7 +54,13 @@ export default function UsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setShowCreate(false);
-      setNewUser({ name: "", email: "", password: "", isAdmin: false, teamIds: [] });
+      setNewUser({
+        name: "",
+        email: "",
+        password: "",
+        isAdmin: false,
+        teamIds: [],
+      });
       toast.success("User created");
     },
     onError: (error: any) => {
@@ -67,7 +73,11 @@ export default function UsersPage() {
       const res = await fetch("/api/users/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, newPassword: password, forceReset: true }),
+        body: JSON.stringify({
+          userId,
+          newPassword: password,
+          forceReset: true,
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -86,7 +96,9 @@ export default function UsersPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Users</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Users
+            </h1>
           </div>
           <button
             onClick={() => setShowCreate(true)}
@@ -98,10 +110,13 @@ export default function UsersPage() {
         </div>
 
         {showCreate && (
-          <div className="rounded-xl border border-border bg-card p-5 shadow-lg">
+          <div className="rounded-xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-foreground">Create User</h3>
-              <button onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setShowCreate(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -109,7 +124,9 @@ export default function UsersPage() {
               <input
                 type="text"
                 value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, name: e.target.value })
+                }
                 placeholder="Full name"
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 required
@@ -117,7 +134,9 @@ export default function UsersPage() {
               <input
                 type="email"
                 value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, email: e.target.value })
+                }
                 placeholder="Email address"
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 required
@@ -125,7 +144,9 @@ export default function UsersPage() {
               <input
                 type="password"
                 value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, password: e.target.value })
+                }
                 placeholder="Initial password"
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 required
@@ -136,24 +157,41 @@ export default function UsersPage() {
                   type="checkbox"
                   id="isAdmin"
                   checked={newUser.isAdmin}
-                  onChange={(e) => setNewUser({ ...newUser, isAdmin: e.target.checked })}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, isAdmin: e.target.checked })
+                  }
                   className="rounded border-border text-primary"
                 />
-                <label htmlFor="isAdmin" className="text-sm text-foreground">Grant admin privileges</label>
+                <label htmlFor="isAdmin" className="text-sm text-foreground">
+                  Grant admin privileges
+                </label>
               </div>
               <div>
-                <label className="mb-2 block text-sm text-muted-foreground">Assign to teams</label>
+                <label className="mb-2 block text-sm text-muted-foreground">
+                  Assign to teams
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {teams?.map((team: any) => (
-                    <label key={team.id} className="flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground cursor-pointer">
+                    <label
+                      key={team.id}
+                      className="flex items-center gap-1.5 rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={newUser.teamIds.includes(team.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setNewUser({ ...newUser, teamIds: [...newUser.teamIds, team.id] });
+                            setNewUser({
+                              ...newUser,
+                              teamIds: [...newUser.teamIds, team.id],
+                            });
                           } else {
-                            setNewUser({ ...newUser, teamIds: newUser.teamIds.filter((id) => id !== team.id) });
+                            setNewUser({
+                              ...newUser,
+                              teamIds: newUser.teamIds.filter(
+                                (id) => id !== team.id,
+                              ),
+                            });
                           }
                         }}
                         className="rounded border-border text-primary"
@@ -165,7 +203,12 @@ export default function UsersPage() {
               </div>
               <button
                 onClick={() => createMutation.mutate(newUser)}
-                disabled={!newUser.name || !newUser.email || !newUser.password || createMutation.isPending}
+                disabled={
+                  !newUser.name ||
+                  !newUser.email ||
+                  !newUser.password ||
+                  createMutation.isPending
+                }
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {createMutation.isPending ? "Creating..." : "Create User"}
@@ -186,30 +229,48 @@ export default function UsersPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Teams</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      User
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Teams
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {users?.map((user: any) => (
-                    <tr key={user.id} className="border-b border-border transition-colors hover:bg-muted/30">
+                    <tr
+                      key={user.id}
+                      className="border-b border-border transition-colors hover:bg-muted/30"
+                    >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
                             {user.name?.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-foreground">{user.name}</p>
-                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                            <p className="text-sm font-medium text-foreground">
+                              {user.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {user.email}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {user.memberships?.slice(0, 3).map((m: any) => (
-                            <span key={m.team.id} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                            <span
+                              key={m.team.id}
+                              className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                            >
                               {m.team.name}
                             </span>
                           ))}
@@ -233,9 +294,14 @@ export default function UsersPage() {
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => {
-                            const pwd = prompt("Enter new temporary password (min 8 chars):");
+                            const pwd = prompt(
+                              "Enter new temporary password (min 8 chars):",
+                            );
                             if (pwd && pwd.length >= 8) {
-                              resetPasswordMutation.mutate({ userId: user.id, password: pwd });
+                              resetPasswordMutation.mutate({
+                                userId: user.id,
+                                password: pwd,
+                              });
                             }
                           }}
                           className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-foreground hover:bg-muted"
@@ -253,7 +319,9 @@ export default function UsersPage() {
             {!users?.length && (
               <div className="flex flex-col items-center justify-center py-20">
                 <Users size={40} className="mb-3 text-muted-foreground/40" />
-                <p className="text-sm font-medium text-muted-foreground">No users yet</p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  No users yet
+                </p>
                 <button
                   onClick={() => setShowCreate(true)}
                   className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"

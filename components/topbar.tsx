@@ -1,7 +1,16 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Menu, Zap, AlertTriangle, Check, ChevronDown } from "lucide-react";
+import {
+  Bell,
+  Menu,
+  Zap,
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  Plus,
+} from "lucide-react";
+import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
@@ -9,7 +18,8 @@ import { toast } from "react-hot-toast";
 
 export function TopBar({ user }: { user: any }) {
   const queryClient = useQueryClient();
-  const { sidebarOpen, setMobileMenuOpen, currentTeamId, setCurrentTeamId } = useAppStore();
+  const { sidebarOpen, setMobileMenuOpen, currentTeamId, setCurrentTeamId } =
+    useAppStore();
   const [notifOpen, setNotifOpen] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -41,8 +51,10 @@ export function TopBar({ user }: { user: any }) {
   // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
-      if (teamRef.current && !teamRef.current.contains(e.target as Node)) setTeamOpen(false);
+      if (notifRef.current && !notifRef.current.contains(e.target as Node))
+        setNotifOpen(false);
+      if (teamRef.current && !teamRef.current.contains(e.target as Node))
+        setTeamOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -75,7 +87,7 @@ export function TopBar({ user }: { user: any }) {
     <header
       className={cn(
         "fixed top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 backdrop-blur-md px-6 transition-all duration-300",
-        sidebarOpen ? "left-64 right-0" : "left-16 right-0"
+        sidebarOpen ? "left-64 right-0" : "left-16 right-0",
       )}
     >
       <div className="flex items-center gap-4">
@@ -86,7 +98,7 @@ export function TopBar({ user }: { user: any }) {
         >
           <Menu size={20} />
         </button>
-        {teams?.length > 0 && (
+        {teams?.length > 0 ? (
           <div className="relative" ref={teamRef}>
             <button
               onClick={() => setTeamOpen(!teamOpen)}
@@ -95,13 +107,19 @@ export function TopBar({ user }: { user: any }) {
               aria-expanded={teamOpen}
               aria-label={`Current team: ${currentTeam?.name ?? "Select team"}`}
             >
-              <Zap size={14} className="text-primary" />
+              <Zap size={14} className="text-muted-foreground" />
               {currentTeam?.name ?? "Select Team"}
-              <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", teamOpen && "rotate-180")} />
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "text-muted-foreground transition-transform",
+                  teamOpen && "rotate-180",
+                )}
+              />
             </button>
             {teamOpen && (
               <div
-                className="absolute left-0 top-full mt-1 w-56 rounded-xl border border-border bg-popover p-1 shadow-xl z-50"
+                className="absolute left-0 top-full mt-1 w-56 rounded-xl border border-border bg-popover p-1 shadow-sm z-50"
                 role="listbox"
                 aria-label="Teams"
               >
@@ -117,18 +135,28 @@ export function TopBar({ user }: { user: any }) {
                     className={cn(
                       "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                       currentTeamId === team.id
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground hover:bg-muted"
+                        ? "bg-primary/10 text-foreground"
+                        : "text-foreground hover:bg-muted",
                     )}
                   >
                     <Zap size={14} />
                     {team.name}
-                    {currentTeamId === team.id && <Check size={14} className="ml-auto text-primary" />}
+                    {currentTeamId === team.id && (
+                      <Check size={14} className="ml-auto text-primary" />
+                    )}
                   </button>
                 ))}
               </div>
             )}
           </div>
+        ) : (
+          <Link
+            href="/teams"
+            className="hidden items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors sm:inline-flex"
+          >
+            <Plus size={12} />
+            Create a team
+          </Link>
         )}
       </div>
 
@@ -149,7 +177,7 @@ export function TopBar({ user }: { user: any }) {
             )}
           </button>
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-border bg-popover p-2 shadow-xl z-50">
+            <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-border bg-popover p-2 shadow-sm z-50">
               <div className="flex items-center justify-between px-2 py-1.5">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Notifications
@@ -176,11 +204,14 @@ export function TopBar({ user }: { user: any }) {
                   }}
                   className={cn(
                     "flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-muted",
-                    !n.isRead && "bg-primary/5"
+                    !n.isRead && "bg-primary/5",
                   )}
                 >
                   {n.type === "alert" ? (
-                    <AlertTriangle size={14} className="mt-0.5 shrink-0 text-primary" />
+                    <AlertTriangle
+                      size={14}
+                      className="mt-0.5 shrink-0 text-primary"
+                    />
                   ) : (
                     <Zap size={14} className="mt-0.5 shrink-0 text-primary" />
                   )}
@@ -189,7 +220,10 @@ export function TopBar({ user }: { user: any }) {
                     <p className="text-xs text-muted-foreground">{n.message}</p>
                   </div>
                   {!n.isRead && (
-                    <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />
+                    <span
+                      className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary"
+                      aria-label="Unread"
+                    />
                   )}
                 </button>
               ))}
@@ -198,7 +232,7 @@ export function TopBar({ user }: { user: any }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
             {user?.name?.charAt(0).toUpperCase() || "U"}
           </div>
           <span className="hidden text-sm font-medium text-foreground md:block">
