@@ -75,7 +75,7 @@ function TaskCard({
       }}
       className={cn(
         "group relative cursor-grab rounded-lg border border-border bg-card p-3 shadow-sm transition-colors hover:border-primary/30 active:cursor-grabbing",
-        isDragging && "opacity-30"
+        isDragging && "opacity-30",
       )}
     >
       <button
@@ -94,7 +94,7 @@ function TaskCard({
         <span
           className={cn(
             "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
-            priorityColors[task.priority] || priorityColors.medium
+            priorityColors[task.priority] || priorityColors.medium,
           )}
         >
           {task.priority}
@@ -163,9 +163,7 @@ function BoardColumn({
         ref={setNodeRef}
         className={cn(
           "flex min-h-[200px] flex-col gap-2 rounded-xl p-2 transition-colors",
-          isOver
-            ? "bg-primary/10 ring-1 ring-primary/30"
-            : "bg-muted/40"
+          isOver ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/40",
         )}
       >
         {tasks.map((task) => (
@@ -212,7 +210,7 @@ export default function TasksPage() {
     queryKey: ["tasks", currentTeamId, activeBoard?.id],
     queryFn: async () => {
       const res = await fetch(
-        `/api/tasks?teamId=${currentTeamId || ""}&boardId=${activeBoard?.id || ""}`
+        `/api/tasks?teamId=${currentTeamId || ""}&boardId=${activeBoard?.id || ""}`,
       );
       if (!res.ok) return [];
       return res.json();
@@ -307,13 +305,10 @@ export default function TasksPage() {
     }
   }
 
-  const handleMenuClick = useCallback(
-    (task: Task, e: React.MouseEvent) => {
-      setMenuTask(task);
-      setMenuPos({ x: e.clientX, y: e.clientY });
-    },
-    []
-  );
+  const handleMenuClick = useCallback((task: Task, e: React.MouseEvent) => {
+    setMenuTask(task);
+    setMenuPos({ x: e.clientX, y: e.clientY });
+  }, []);
 
   function getTasksForColumn(columnId: string) {
     return (
@@ -343,7 +338,10 @@ export default function TasksPage() {
 
         {!activeBoard && (
           <div className="rounded-xl border border-dashed border-border py-16 text-center">
-            <Inbox size={40} className="mx-auto mb-3 text-muted-foreground/40" />
+            <Inbox
+              size={40}
+              className="mx-auto mb-3 text-muted-foreground/40"
+            />
             <p className="text-sm text-muted-foreground">
               No taskboard found for this team.
             </p>
@@ -372,7 +370,7 @@ export default function TasksPage() {
             </div>
             <DragOverlay dropAnimation={null}>
               {activeTask ? (
-                <div className="rounded-lg border border-primary/30 bg-card p-3 shadow-xl opacity-90">
+                <div className="rounded-lg border border-primary/30 bg-card p-3 shadow-sm opacity-90">
                   <p className="text-sm font-medium text-foreground">
                     {activeTask.title}
                   </p>
@@ -391,7 +389,7 @@ export default function TasksPage() {
               aria-hidden="true"
             />
             <div
-              className="fixed z-50 w-56 rounded-xl border border-border bg-popover p-1 shadow-xl"
+              className="fixed z-50 w-56 rounded-xl border border-border bg-popover p-1 shadow-sm"
               style={{
                 top: Math.min(menuPos.y, window.innerHeight - 300),
                 left: Math.min(menuPos.x, window.innerWidth - 230),
@@ -464,16 +462,16 @@ export default function TasksPage() {
               <div className="my-1 border-t border-border" />
               <button
                 onClick={() => {
-                  if (
-                    confirm("Delete this task? This cannot be undone.")
-                  ) {
+                  if (confirm("Delete this task? This cannot be undone.")) {
                     fetch(`/api/tasks/${menuTask.id}`, {
                       method: "DELETE",
-                    }).then((res) => {
-                      if (!res.ok) throw new Error("Failed to delete");
-                      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-                      toast.success("Task deleted");
-                    }).catch(() => toast.error("Failed to delete task"));
+                    })
+                      .then((res) => {
+                        if (!res.ok) throw new Error("Failed to delete");
+                        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+                        toast.success("Task deleted");
+                      })
+                      .catch(() => toast.error("Failed to delete task"));
                   }
                   setMenuTask(null);
                 }}
@@ -495,7 +493,7 @@ export default function TasksPage() {
             aria-modal="true"
             aria-label="Create task"
           >
-            <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl">
+            <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">
                   New Task

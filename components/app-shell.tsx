@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./topbar";
+import { KeyboardShortcutsModal } from "./keyboard-shortcuts-modal";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +33,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" role="status" aria-label="Loading" />
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"
+          role="status"
+          aria-label="Loading"
+        />
       </div>
     );
   }
@@ -65,11 +70,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           "flex flex-1 flex-col transition-all duration-300",
-          sidebarOpen ? "lg:ml-64" : "lg:ml-16"
+          sidebarOpen ? "lg:ml-64" : "lg:ml-16",
         )}
       >
         <TopBar user={user} />
-        <main id="main-content" className="flex-1 pt-16" role="main" tabIndex={-1}>
+        <KeyboardShortcutsModal />
+        <main
+          id="main-content"
+          className="flex-1 pt-16"
+          role="main"
+          tabIndex={-1}
+        >
           <div className="p-6 max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
