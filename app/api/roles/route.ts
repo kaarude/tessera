@@ -10,7 +10,11 @@ export async function GET(request: Request) {
     const user = await requireAuth();
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get("teamId") || undefined;
-    if (teamId && !user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
+    if (
+      teamId &&
+      !user.memberships.some((m) => m.teamId === teamId) &&
+      !user.isAdmin
+    ) {
       return apiError(403, "Not a member of that team");
     }
     const roles = await prisma.role.findMany({
@@ -27,44 +31,46 @@ export async function GET(request: Request) {
   }
 }
 
-export const POST = withRoute(
-  async ({ user, body }) => {
-    const parsed = RoleCreateBody.safeParse(body);
-    if (!parsed.success) {
-      return apiError(400, "Invalid request", { details: parsed.error.issues });
-    }
-    const { name, description, teamId, permissions } = parsed.data;
+export const POST = withRoute(async ({ user, body }) => {
+  const parsed = RoleCreateBody.safeParse(body);
+  if (!parsed.success) {
+    return apiError(400, "Invalid request", { details: parsed.error.issues });
+  }
+  const { name, description, teamId, permissions } = parsed.data;
 
-    if (teamId && !user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
-      return apiError(403, "Not a member of that team");
-    }
-    const allowed =
-      user.isAdmin ||
-      (await hasPermission(user.id, "roles:create", teamId ?? undefined));
-    if (!allowed) return apiError(403, "Forbidden: roles:create required");
+  if (
+    teamId &&
+    !user.memberships.some((m) => m.teamId === teamId) &&
+    !user.isAdmin
+  ) {
+    return apiError(403, "Not a member of that team");
+  }
+  const allowed =
+    user.isAdmin ||
+    (await hasPermission(user.id, "roles:create", teamId ?? undefined));
+  if (!allowed) return apiError(403, "Forbidden: roles:create required");
 
-    const role = await prisma.role.create({
-      data: {
-        name,
-        description,
-        teamId: teamId ?? null,
-        isPlatform: !teamId,
-        permissions: {
-          create: permissions.map((p) => ({ permission: p })),
-        },
+  const role = await prisma.role.create({
+    data: {
+      name,
+      description,
+      teamId: teamId ?? null,
+      isPlatform: !teamId,
+      permissions: {
+        create: permissions.map((p) => ({ permission: p })),
       },
-      include: { permissions: true },
-    });
+    },
+    include: { permissions: true },
+  });
 
-    await logAudit({
-      actorId: user.id,
-      action: "create",
-      entityType: "role",
-      entityId: role.id,
-      teamId: teamId ?? undefined,
-      metadata: { name, permissions },
-    });
+  await logAudit({
+    actorId: user.id,
+    action: "create",
+    entityType: "role",
+    entityId: role.id,
+    teamId: teamId ?? undefined,
+    metadata: { name, permissions },
+  });
 
-    return NextResponse.json(role, { status: 201 });
-  },
-);
+  return NextResponse.json(role, { status: 201 });
+});

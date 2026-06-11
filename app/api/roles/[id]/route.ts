@@ -23,7 +23,11 @@ export const PATCH = withRoute<{ id: string }>(
 
     const allowed =
       user.isAdmin ||
-      (await hasPermission(user.id, "roles:edit", existing.teamId ?? undefined));
+      (await hasPermission(
+        user.id,
+        "roles:edit",
+        existing.teamId ?? undefined,
+      ));
     if (!allowed) return apiError(403, "Forbidden: roles:edit required");
 
     const role = await prisma.$transaction(async (tx) => {
@@ -60,31 +64,33 @@ export const PATCH = withRoute<{ id: string }>(
   },
 );
 
-export const DELETE = withRoute<{ id: string }>(
-  async ({ user, params }) => {
-    const { id } = params;
-    if (!CUID.test(id)) return apiError(400, "Invalid id");
+export const DELETE = withRoute<{ id: string }>(async ({ user, params }) => {
+  const { id } = params;
+  if (!CUID.test(id)) return apiError(400, "Invalid id");
 
-    const existing = await prisma.role.findUnique({ where: { id } });
-    if (!existing) return apiError(404, "Not found");
+  const existing = await prisma.role.findUnique({ where: { id } });
+  if (!existing) return apiError(404, "Not found");
 
-    const allowed =
-      user.isAdmin ||
-      (await hasPermission(user.id, "roles:delete", existing.teamId ?? undefined));
-    if (!allowed) return apiError(403, "Forbidden: roles:delete required");
+  const allowed =
+    user.isAdmin ||
+    (await hasPermission(
+      user.id,
+      "roles:delete",
+      existing.teamId ?? undefined,
+    ));
+  if (!allowed) return apiError(403, "Forbidden: roles:delete required");
 
-    await prisma.$transaction(async (tx) => {
-      await tx.role.delete({ where: { id } });
-      await tx.auditLog.create({
-        data: {
-          actorId: user.id,
-          action: "delete",
-          entityType: "role",
-          entityId: id,
-          teamId: existing.teamId,
-        },
-      });
+  await prisma.$transaction(async (tx) => {
+    await tx.role.delete({ where: { id } });
+    await tx.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "delete",
+        entityType: "role",
+        entityId: id,
+        teamId: existing.teamId,
+      },
     });
-    return NextResponse.json({ success: true });
-  },
-);
+  });
+  return NextResponse.json({ success: true });
+});

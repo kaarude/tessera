@@ -7,30 +7,38 @@ datasource db {
 }
 
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
-  name            String
-  passwordHash    String
-  avatarUrl       String?
-  isAdmin         Boolean  @default(false)
-  mustChangePassword Boolean @default(false)
-  sessionVersion  Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  name               String
+  passwordHash       String
+  avatarUrl          String?
+  isAdmin            Boolean  @default(false)
+  mustChangePassword Boolean  @default(false)
+  sessionVersion     Int      @default(0)
+  mfaEnabled         Boolean  @default(false)
+  mfaSecretEncrypted String?
+  recoveryCodeHashes String[] @default([])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // Relations
-  ownedTeams      Team[]           @relation("TeamOwner")
-  memberships     TeamMembership[]
-  userRoles       UserRole[]
-  notes           Note[]           @relation("NoteOwner")
-  noteShares      NoteShare[]
-  calendarEntries CalendarEntry[]  @relation("CalendarOwner")
-  assignedCalendarEntries CalendarEntry[] @relation("CalendarAssignee")
-  createdTasks    Task[]           @relation("TaskCreator")
-  assignedTasks   Task[]           @relation("TaskAssignee")
-  auditLogs       AuditLog[]       @relation("AuditActor")
-  notifications   Notification[]   @relation("NotificationUser")
-  attachments     NoteAttachment[] @relation("AttachmentUploader")
+  ownedTeams              Team[]              @relation("TeamOwner")
+  memberships             TeamMembership[]
+  userRoles               UserRole[]
+  notes                   Note[]              @relation("NoteOwner")
+  noteShares              NoteShare[]
+  calendarEntries         CalendarEntry[]     @relation("CalendarOwner")
+  assignedCalendarEntries CalendarEntry[]     @relation("CalendarAssignee")
+  createdTasks            Task[]              @relation("TaskCreator")
+  assignedTasks           Task[]              @relation("TaskAssignee")
+  auditLogs               AuditLog[]          @relation("AuditActor")
+  notifications           Notification[]      @relation("NotificationUser")
+  attachments             NoteAttachment[]    @relation("AttachmentUploader")
+  sessions                UserSession[]
+  apiTokens               ApiToken[]
+  webhooks                Webhook[]
+  createdBackups          SystemBackup[]      @relation("BackupCreator")
+  boardTemplates          TaskBoardTemplate[] @relation("TemplateCreator")
 }
 
 model Team {
@@ -41,21 +49,23 @@ model Team {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  owner       User             @relation("TeamOwner", fields: [ownerId], references: [id])
-  memberships TeamMembership[]
-  roles       Role[]
-  notes       Note[]
-  noteShares  NoteShare[]
+  owner           User                @relation("TeamOwner", fields: [ownerId], references: [id])
+  memberships     TeamMembership[]
+  roles           Role[]
+  notes           Note[]
+  noteShares      NoteShare[]
   calendarEntries CalendarEntry[]
-  tasks       Task[]
-  boards      TaskBoard[]
-  auditLogs   AuditLog[]
+  tasks           Task[]
+  boards          TaskBoard[]
+  auditLogs       AuditLog[]
+  boardTemplates  TaskBoardTemplate[]
+  webhooks        Webhook[]
 }
 
 model TeamMembership {
-  id     String @id @default(cuid())
-  userId String
-  teamId String
+  id       String   @id @default(cuid())
+  userId   String
+  teamId   String
   joinedAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -73,7 +83,7 @@ model Role {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  team        Team?           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team?            @relation(fields: [teamId], references: [id], onDelete: Cascade)
   permissions RolePermission[]
   userRoles   UserRole[]
 
@@ -91,7 +101,7 @@ model RolePermission {
 }
 
 model UserRole {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   userId String
   roleId String
   teamId String?
@@ -112,9 +122,9 @@ model Note {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner      User             @relation("NoteOwner", fields: [ownerId], references: [id])
-  team       Team?            @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  shares     NoteShare[]
+  owner       User             @relation("NoteOwner", fields: [ownerId], references: [id])
+  team        Team?            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  shares      NoteShare[]
   attachments NoteAttachment[]
 
   @@index([ownerId])
@@ -137,35 +147,40 @@ model NoteShare {
 }
 
 model NoteAttachment {
-  id        String   @id @default(cuid())
-  noteId    String
-  filename  String
-  s3Key     String
-  mimeType  String
-  size      Int
+  id         String   @id @default(cuid())
+  noteId     String
+  filename   String
+  s3Key      String
+  mimeType   String
+  size       Int
   uploaderId String
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   note     Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
   uploader User @relation("AttachmentUploader", fields: [uploaderId], references: [id])
 }
 
 model CalendarEntry {
-  id          String    @id @default(cuid())
-  title       String
-  description String?   @db.Text
-  startDate   DateTime
-  endDate     DateTime?
-  isAllDay    Boolean   @default(false)
-  userId      String
-  teamId      String?
-  assignedToId String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  title              String
+  description        String?   @db.Text
+  startDate          DateTime
+  endDate            DateTime?
+  isAllDay           Boolean   @default(false)
+  userId             String
+  teamId             String?
+  assignedToId       String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  recurrenceRule     String?
+  recurrenceEnd      DateTime?
+  recurrenceParentId String?
 
-  user       User   @relation("CalendarOwner", fields: [userId], references: [id])
-  team       Team?  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  assignedTo User?  @relation("CalendarAssignee", fields: [assignedToId], references: [id])
+  user                User            @relation("CalendarOwner", fields: [userId], references: [id])
+  team                Team?           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignedTo          User?           @relation("CalendarAssignee", fields: [assignedToId], references: [id])
+  recurrenceParent    CalendarEntry?  @relation("CalendarRecurrence", fields: [recurrenceParentId], references: [id], onDelete: SetNull)
+  recurrenceInstances CalendarEntry[] @relation("CalendarRecurrence")
 
   @@index([startDate])
   @@index([userId])
@@ -179,44 +194,51 @@ model TaskBoard {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  team    Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  columns TaskColumn[]
-  tasks   Task[]
+  team       Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  columns    TaskColumn[]
+  tasks      Task[]
+  templateId String?
+  template   TaskBoardTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
 }
 
 model TaskColumn {
-  id       String @id @default(cuid())
-  name     String
-  boardId  String
-  position Int    @default(0)
+  id        String   @id @default(cuid())
+  name      String
+  boardId   String
+  position  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  board  TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  tasks  Task[]
+  board TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
 }
 
 model Task {
-  id          String    @id @default(cuid())
-  title       String
-  description String?   @db.Text
-  status      String    @default("todo")
-  priority    String    @default("medium")
-  dueDate     DateTime?
-  assigneeId  String?
-  teamId      String
-  boardId     String
-  columnId    String
-  position    Int       @default(0)
-  createdById String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  title              String
+  description        String?   @db.Text
+  status             String    @default("todo")
+  priority           String    @default("medium")
+  dueDate            DateTime?
+  assigneeId         String?
+  teamId             String
+  boardId            String
+  columnId           String
+  position           Int       @default(0)
+  createdById        String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  recurrenceRule     String?
+  recurrenceEnd      DateTime?
+  recurrenceParentId String?
 
-  assignee User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  team     Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  board    TaskBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  column   TaskColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  creator  User      @relation("TaskCreator", fields: [createdById], references: [id])
+  assignee            User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  team                Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  board               TaskBoard  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  column              TaskColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  creator             User       @relation("TaskCreator", fields: [createdById], references: [id])
+  recurrenceParent    Task?      @relation("TaskRecurrence", fields: [recurrenceParentId], references: [id], onDelete: SetNull)
+  recurrenceInstances Task[]     @relation("TaskRecurrence")
 
   @@index([teamId])
   @@index([assigneeId])
@@ -225,19 +247,20 @@ model Task {
 }
 
 model AuditLog {
-  id           String   @id @default(cuid())
-  actorId      String
-  action       String
-  entityType   String
-  entityId     String
-  teamId       String?
-  metadata     Json?
-  beforeData   Json?
-  afterData    Json?
-  createdAt    DateTime @default(now())
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  teamId     String?
+  metadata   Json?
+  beforeData Json?
+  afterData  Json?
+  createdAt  DateTime @default(now())
 
   actor User  @relation("AuditActor", fields: [actorId], references: [id])
   team  Team? @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   @@index([actorId])
   @@index([teamId])
   @@index([createdAt])
@@ -245,15 +268,15 @@ model AuditLog {
 }
 
 model Notification {
-  id               String   @id @default(cuid())
-  userId           String
-  type             String
-  title            String
-  message          String
-  isRead           Boolean  @default(false)
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  title             String
+  message           String
+  isRead            Boolean  @default(false)
   relatedEntityType String?
-  relatedEntityId  String?
-  createdAt        DateTime @default(now())
+  relatedEntityId   String?
+  createdAt         DateTime @default(now())
 
   user User @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
 
@@ -275,4 +298,110 @@ model LoginAttempt {
   updatedAt DateTime @updatedAt
 
   @@index([resetAt])
+}
+
+model UserSession {
+  id         String    @id @default(cuid())
+  userId     String
+  sessionId  String    @unique
+  ipAddress  String?
+  userAgent  String?
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  prefix     String
+  tokenHash  String    @unique
+  scopes     String[]
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([prefix])
+}
+
+model Webhook {
+  id              String    @id @default(cuid())
+  userId          String
+  teamId          String?
+  name            String
+  url             String
+  secretHash      String
+  secretEncrypted String
+  events          String[]
+  enabled         Boolean   @default(true)
+  lastSuccessAt   DateTime?
+  lastFailureAt   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team       Team?             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([userId])
+  @@index([teamId])
+}
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  webhookId   String
+  event       String
+  statusCode  Int?
+  success     Boolean  @default(false)
+  error       String?
+  attemptedAt DateTime @default(now())
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+  @@index([attemptedAt])
+}
+
+model TaskBoardTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  teamId      String?
+  createdById String
+  columns     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team      Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User        @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  boards    TaskBoard[]
+
+  @@index([teamId])
+}
+
+model SystemBackup {
+  id          String    @id @default(cuid())
+  createdById String
+  filename    String
+  s3Key       String
+  size        Int
+  checksum    String
+  status      String    @default("ready")
+  createdAt   DateTime  @default(now())
+  restoredAt  DateTime?
+
+  createdBy User @relation("BackupCreator", fields: [createdById], references: [id])
+
+  @@index([createdAt])
 }

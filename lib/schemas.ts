@@ -104,6 +104,11 @@ export const TaskCreateBody = z
     boardId: cuid,
     columnId: cuid,
     position: z.number().int().min(0).default(0),
+    recurrenceRule: z
+      .enum(["daily", "weekly", "monthly"])
+      .nullable()
+      .optional(),
+    recurrenceEnd: z.string().datetime().nullable().optional(),
   })
   .strict();
 
@@ -119,6 +124,11 @@ export const TaskUpdateBody = z
     columnId: cuid.optional(),
     position: z.number().int().min(0).optional(),
     status: z.string().max(50).optional(),
+    recurrenceRule: z
+      .enum(["daily", "weekly", "monthly"])
+      .nullable()
+      .optional(),
+    recurrenceEnd: z.string().datetime().nullable().optional(),
   })
   .strict();
 
@@ -154,7 +164,11 @@ export const RoleUpdateBody = z
 
 export const UserCreateBody = z
   .object({
-    email: z.string().email().max(200).transform((v) => v.toLowerCase()),
+    email: z
+      .string()
+      .email()
+      .max(200)
+      .transform((v) => v.toLowerCase()),
     name: z.string().min(1).max(100),
     password: z.string().min(8).max(200),
     isAdmin: z.boolean().default(false),
@@ -172,6 +186,11 @@ export const CalendarCreateBody = z
     isAllDay: z.boolean().default(false),
     teamId: cuid.nullable().optional(),
     assignedToId: cuid.nullable().optional(),
+    recurrenceRule: z
+      .enum(["daily", "weekly", "monthly"])
+      .nullable()
+      .optional(),
+    recurrenceEnd: z.string().datetime().nullable().optional(),
   })
   .strict()
   .refine((data) => !data.endDate || data.endDate >= data.startDate, {
@@ -188,6 +207,11 @@ export const CalendarUpdateBody = z
     isAllDay: z.boolean().optional(),
     teamId: cuid.nullable().optional(),
     assignedToId: cuid.nullable().optional(),
+    recurrenceRule: z
+      .enum(["daily", "weekly", "monthly"])
+      .nullable()
+      .optional(),
+    recurrenceEnd: z.string().datetime().nullable().optional(),
   })
   .strict();
 

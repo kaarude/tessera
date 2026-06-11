@@ -58,11 +58,15 @@ export default function NoteEditorPage() {
     }
     // We intentionally only re-sync when the note's id changes — not on
     // every cache update — to avoid clobbering in-progress edits.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [note?.id]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const isDirty = note && (title !== note.title || content !== (note.content || "") || isPrivate !== note.isPrivate);
+  const isDirty =
+    note &&
+    (title !== note.title ||
+      content !== (note.content || "") ||
+      isPrivate !== note.isPrivate);
   useBeforeUnload(isDirty);
 
   const updateMutation = useMutation({
@@ -139,7 +143,10 @@ export default function NoteEditorPage() {
     return (
       <AppShell>
         <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" role="status" />
+          <div
+            className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"
+            role="status"
+          />
         </div>
       </AppShell>
     );
@@ -150,7 +157,10 @@ export default function NoteEditorPage() {
       <AppShell>
         <div className="flex h-64 flex-col items-center justify-center">
           <p className="text-muted-foreground">Note not found</p>
-          <Link href="/notes" className="mt-2 text-primary hover:underline text-sm">
+          <Link
+            href="/notes"
+            className="mt-2 text-primary hover:underline text-sm"
+          >
             Back to notes
           </Link>
         </div>
@@ -211,7 +221,9 @@ export default function NoteEditorPage() {
                 onClick={() => setMode("edit")}
                 className={cn(
                   "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                  mode === "edit" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  mode === "edit"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 aria-pressed={mode === "edit"}
               >
@@ -222,7 +234,9 @@ export default function NoteEditorPage() {
                 onClick={() => setMode("preview")}
                 className={cn(
                   "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                  mode === "preview" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  mode === "preview"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 aria-pressed={mode === "preview"}
               >
@@ -242,7 +256,9 @@ export default function NoteEditorPage() {
                 <Save size={14} />
               )}
               <span className="hidden sm:inline">Save</span>
-              <kbd className="hidden lg:inline rounded bg-primary-foreground/20 px-1 text-[9px] font-mono">Cmd+S</kbd>
+              <kbd className="hidden lg:inline rounded bg-primary-foreground/20 px-1 text-[9px] font-mono">
+                Cmd+S
+              </kbd>
             </button>
 
             <button
@@ -259,7 +275,9 @@ export default function NoteEditorPage() {
                 onClick={() => setShowShare(!showShare)}
                 className={cn(
                   "flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium transition-colors",
-                  showShare ? "bg-primary/10 text-primary border-primary/30" : "text-foreground hover:bg-muted"
+                  showShare
+                    ? "bg-primary/10 text-primary border-primary/30"
+                    : "text-foreground hover:bg-muted",
                 )}
               >
                 <Share2 size={14} />
@@ -269,7 +287,8 @@ export default function NoteEditorPage() {
 
             <button
               onClick={() => {
-                if (confirm("Delete this note? This cannot be undone.")) deleteMutation.mutate();
+                if (confirm("Delete this note? This cannot be undone."))
+                  deleteMutation.mutate();
               }}
               className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
               aria-label="Delete note"
@@ -281,7 +300,11 @@ export default function NoteEditorPage() {
 
         {/* Share Panel */}
         {showShare && currentTeamId && (
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm" role="region" aria-label="Sharing settings">
+          <div
+            className="rounded-xl border border-border bg-card p-4 shadow-sm"
+            role="region"
+            aria-label="Sharing settings"
+          >
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">Sharing</h3>
               <button
@@ -305,18 +328,24 @@ export default function NoteEditorPage() {
                   }}
                   className="sr-only"
                 />
-                <div className={cn(
-                  "h-5 w-9 rounded-full transition-colors",
-                  !isPrivate ? "bg-primary" : "bg-muted-foreground/30"
-                )}>
-                  <div className={cn(
-                    "h-4 w-4 rounded-full bg-white shadow-sm transition-transform mt-0.5",
-                    !isPrivate ? "translate-x-4" : "translate-x-0.5"
-                  )} />
+                <div
+                  className={cn(
+                    "h-5 w-9 rounded-full transition-colors",
+                    !isPrivate ? "bg-primary" : "bg-muted-foreground/30",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "h-4 w-4 rounded-full bg-white shadow-sm transition-transform mt-0.5",
+                      !isPrivate ? "translate-x-4" : "translate-x-0.5",
+                    )}
+                  />
                 </div>
               </div>
               <span className="text-sm text-foreground">
-                {isPrivate ? "Private — only you can see this" : "Shared with team"}
+                {isPrivate
+                  ? "Private — only you can see this"
+                  : "Shared with team"}
               </span>
             </label>
           </div>

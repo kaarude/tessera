@@ -55,7 +55,10 @@ export const PATCH = withRoute<{ id: string }>(
     }
 
     // Reassignment requires tasks:reassign_users / tasks:reassign_teams.
-    if (data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId) {
+    if (
+      data.assigneeId !== undefined &&
+      data.assigneeId !== existing.assigneeId
+    ) {
       const perm = await hasPermission(
         user.id,
         "tasks:reassign_users",
@@ -91,7 +94,9 @@ export const PATCH = withRoute<{ id: string }>(
       return apiError(400, "column/board/team mismatch");
     }
     if (
-      !user.memberships.some((membership) => membership.teamId === targetTeamId) &&
+      !user.memberships.some(
+        (membership) => membership.teamId === targetTeamId,
+      ) &&
       !user.isAdmin
     ) {
       return apiError(403, "Not a member of the target team");
@@ -109,7 +114,9 @@ export const PATCH = withRoute<{ id: string }>(
       where: { id },
       data: {
         ...(data.title !== undefined && { title: data.title }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.priority !== undefined && { priority: data.priority }),
         ...(data.dueDate !== undefined && {
           dueDate: data.dueDate ? new Date(data.dueDate) : null,
@@ -136,34 +143,32 @@ export const PATCH = withRoute<{ id: string }>(
   },
 );
 
-export const DELETE = withRoute<{ id: string }>(
-  async ({ user, params }) => {
-    const { id } = params;
-    if (!CUID.test(id)) return apiError(400, "Invalid id");
+export const DELETE = withRoute<{ id: string }>(async ({ user, params }) => {
+  const { id } = params;
+  if (!CUID.test(id)) return apiError(400, "Invalid id");
 
-    const existing = await prisma.task.findUnique({ where: { id } });
-    if (!existing) return apiError(404, "Not found");
+  const existing = await prisma.task.findUnique({ where: { id } });
+  if (!existing) return apiError(404, "Not found");
 
-    const isOwn =
-      existing.createdById === user.id || existing.assigneeId === user.id;
-    const permission = await hasPermission(
-      user.id,
-      isOwn ? "tasks:delete_own" : "tasks:delete_others",
-      existing.teamId,
-    );
-    if (!permission && !user.isAdmin) {
-      return apiError(403, "Forbidden");
-    }
+  const isOwn =
+    existing.createdById === user.id || existing.assigneeId === user.id;
+  const permission = await hasPermission(
+    user.id,
+    isOwn ? "tasks:delete_own" : "tasks:delete_others",
+    existing.teamId,
+  );
+  if (!permission && !user.isAdmin) {
+    return apiError(403, "Forbidden");
+  }
 
-    await prisma.task.delete({ where: { id } });
-    await logAudit({
-      actorId: user.id,
-      action: "delete",
-      entityType: "task",
-      entityId: id,
-      teamId: existing.teamId,
-      metadata: { title: existing.title },
-    });
-    return NextResponse.json({ success: true });
-  },
-);
+  await prisma.task.delete({ where: { id } });
+  await logAudit({
+    actorId: user.id,
+    action: "delete",
+    entityType: "task",
+    entityId: id,
+    teamId: existing.teamId,
+    metadata: { title: existing.title },
+  });
+  return NextResponse.json({ success: true });
+});

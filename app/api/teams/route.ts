@@ -18,39 +18,36 @@ export async function GET() {
   }
 }
 
-export const POST = withRoute(
-  async ({ user, body }) => {
-    const parsed = TeamCreateBody.safeParse(body);
-    if (!parsed.success) {
-      return apiError(400, "Invalid request", { details: parsed.error.issues });
-    }
-    const { name, description } = parsed.data;
+export const POST = withRoute(async ({ user, body }) => {
+  const parsed = TeamCreateBody.safeParse(body);
+  if (!parsed.success) {
+    return apiError(400, "Invalid request", { details: parsed.error.issues });
+  }
+  const { name, description } = parsed.data;
 
-    const allowed =
-      user.isAdmin ||
-      (await hasPermission(user.id, "teams:create"));
-    if (!allowed) return apiError(403, "Forbidden: teams:create required");
+  const allowed =
+    user.isAdmin || (await hasPermission(user.id, "teams:create"));
+  if (!allowed) return apiError(403, "Forbidden: teams:create required");
 
-    const team = await prisma.$transaction(async (tx) => {
-      const created = await tx.team.create({
-        data: { name, description, ownerId: user.id },
-      });
-      await tx.teamMembership.create({
-        data: { userId: user.id, teamId: created.id },
-      });
-      await tx.auditLog.create({
-        data: {
-          actorId: user.id,
-          action: "create",
-          entityType: "team",
-          entityId: created.id,
-          teamId: created.id,
-          metadata: { name },
-        },
-      });
-      return created;
+  const team = await prisma.$transaction(async (tx) => {
+    const created = await tx.team.create({
+      data: { name, description, ownerId: user.id },
     });
+    await tx.teamMembership.create({
+      data: { userId: user.id, teamId: created.id },
+    });
+    await tx.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "create",
+        entityType: "team",
+        entityId: created.id,
+        teamId: created.id,
+        metadata: { name },
+      },
+    });
+    return created;
+  });
 
-    return NextResponse.json(team, { status: 201 });
-  },
-);
+  return NextResponse.json(team, { status: 201 });
+});

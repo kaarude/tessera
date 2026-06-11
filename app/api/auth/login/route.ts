@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getSession, verifyPassword } from "@/lib/auth";
+import { createTrackedSession, getSession, verifyPassword } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { checkRateLimit, clearRateLimit } from "@/lib/rate-limit";
+import { decryptSecret } from "@/lib/security";
+import { hashRecoveryCode, verifyTotp } from "@/lib/mfa";
 
 const Body = z
   .object({
     email: z.string().min(1).max(200),
     password: z.string().min(1).max(200),
+    otp: z.string().min(6).max(30).optional(),
   })
   .strict();
 
@@ -79,6 +82,37 @@ export async function POST(request: Request) {
       );
     }
 
+    if (user.mfaEnabled) {
+      if (!body.otp || !user.mfaSecretEncrypted) {
+        return NextResponse.json(
+          { error: "Multi-factor authentication required", mfaRequired: true },
+          { status: 401 },
+        );
+      }
+      const validTotp = verifyTotp(
+        decryptSecret(user.mfaSecretEncrypted),
+        body.otp,
+      );
+      const recoveryHash = hashRecoveryCode(body.otp);
+      const recoveryIndex = user.recoveryCodeHashes.indexOf(recoveryHash);
+      if (!validTotp && recoveryIndex < 0) {
+        return NextResponse.json(
+          { error: "Invalid authentication code", mfaRequired: true },
+          { status: 401 },
+        );
+      }
+      if (recoveryIndex >= 0) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            recoveryCodeHashes: user.recoveryCodeHashes.filter(
+              (_, index) => index !== recoveryIndex,
+            ),
+          },
+        });
+      }
+    }
+
     // Successful auth — release the rate-limit bucket for the email. The IP
     // bucket is left intact (a busy NAT could share IPs across real users).
     await clearRateLimit(`email:${email}`);
@@ -90,6 +124,7 @@ export async function POST(request: Request) {
     session.isAdmin = user.isAdmin;
     session.sessionVersion = user.sessionVersion;
     session.passwordChangeOnly = user.mustChangePassword;
+    session.sessionId = await createTrackedSession(user.id, request);
     await session.save();
 
     await logAudit({

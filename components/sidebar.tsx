@@ -12,6 +12,8 @@ import {
   Shield,
   ClipboardList,
   Settings,
+  KeyRound,
+  Activity,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -33,6 +35,7 @@ const adminNavItems = [
   { href: "/roles", label: "Roles", icon: Shield },
   { href: "/audit", label: "Audit Logs", icon: ClipboardList },
   { href: "/users", label: "Users", icon: Users },
+  { href: "/security", label: "Security Center", icon: Activity },
 ];
 
 export function Sidebar() {
@@ -170,6 +173,17 @@ export function Sidebar() {
         </nav>
 
         <div className="border-t border-border p-2">
+          <Link
+            href="/integrations"
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+              !sidebarOpen && "justify-center px-2",
+            )}
+            title={!sidebarOpen ? "Integrations" : undefined}
+          >
+            <KeyRound size={18} aria-hidden="true" />
+            {sidebarOpen && <span>Integrations</span>}
+          </Link>
           <Link
             href="/settings"
             className={cn(

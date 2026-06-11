@@ -17,9 +17,7 @@ export function canReadNote(
         share.userId === userId ||
         (share.teamId !== null && teamIds.includes(share.teamId)),
     ) ||
-    (!note.isPrivate &&
-      note.teamId !== null &&
-      teamIds.includes(note.teamId))
+    (!note.isPrivate && note.teamId !== null && teamIds.includes(note.teamId))
   );
 }
 

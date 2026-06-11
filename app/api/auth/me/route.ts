@@ -28,6 +28,7 @@ export async function GET() {
       isAdmin: true,
       avatarUrl: true,
       mustChangePassword: true,
+      mfaEnabled: true,
       memberships: {
         include: {
           team: { select: { id: true, name: true } },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { Suspense, use, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Plus, X, Trash2 } from "lucide-react";
 import {
@@ -18,16 +18,34 @@ import { AppShell } from "@/components/app-shell";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+import { buttonVariants } from "@/components/ui/button";
 
 type ViewMode = "month" | "week" | "day";
 
 import { toLocalInput } from "@/lib/datetime";
 
-export default function CalendarPage() {
+export default function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <CalendarPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+function CalendarPageContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  const createRequested = use(searchParams).create === "1";
   const { currentTeamId } = useAppStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(createRequested);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -37,6 +55,8 @@ export default function CalendarPage() {
     startDate: "",
     endDate: "",
     isAllDay: false,
+    recurrenceRule: "",
+    recurrenceEnd: "",
   });
 
   const { data: events } = useQuery({
@@ -185,7 +205,7 @@ export default function CalendarPage() {
             </button>
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+              className={cn(buttonVariants({ size: "sm" }), "px-3")}
             >
               <Plus size={14} />
               Event
@@ -482,6 +502,47 @@ export default function CalendarPage() {
                     All day
                   </label>
                 </div>
+                {!selectedEvent && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Repeat
+                      </label>
+                      <select
+                        value={newEvent.recurrenceRule}
+                        onChange={(event) =>
+                          setNewEvent({
+                            ...newEvent,
+                            recurrenceRule: event.target.value,
+                          })
+                        }
+                        className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none"
+                      >
+                        <option value="">Does not repeat</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Repeat until
+                      </label>
+                      <input
+                        type="date"
+                        value={newEvent.recurrenceEnd}
+                        onChange={(event) =>
+                          setNewEvent({
+                            ...newEvent,
+                            recurrenceEnd: event.target.value,
+                          })
+                        }
+                        disabled={!newEvent.recurrenceRule}
+                        className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   {selectedEvent ? (
                     <>
@@ -503,7 +564,7 @@ export default function CalendarPage() {
                           });
                         }}
                         disabled={updateMutation.isPending}
-                        className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                        className={cn(buttonVariants(), "flex-1 px-4")}
                       >
                         {updateMutation.isPending ? "Updating..." : "Update"}
                       </button>
@@ -532,6 +593,12 @@ export default function CalendarPage() {
                           startDate: startIso,
                           endDate: endIso || null,
                           teamId: currentTeamId,
+                          recurrenceRule: newEvent.recurrenceRule || null,
+                          recurrenceEnd: newEvent.recurrenceEnd
+                            ? new Date(
+                                `${newEvent.recurrenceEnd}T23:59:59`,
+                              ).toISOString()
+                            : null,
                         });
                       }}
                       disabled={
@@ -539,7 +606,7 @@ export default function CalendarPage() {
                         !newEvent.startDate ||
                         createMutation.isPending
                       }
-                      className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                      className={cn(buttonVariants(), "w-full px-4")}
                     >
                       {createMutation.isPending
                         ? "Creating..."

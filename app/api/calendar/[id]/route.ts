@@ -46,12 +46,17 @@ export const PATCH = withRoute<{ id: string }>(
       data.teamId === undefined ? existing.teamId : data.teamId;
     if (
       targetTeamId &&
-      !user.memberships.some((membership) => membership.teamId === targetTeamId) &&
+      !user.memberships.some(
+        (membership) => membership.teamId === targetTeamId,
+      ) &&
       !user.isAdmin
     ) {
       return apiError(403, "Not a member of the target team");
     }
-    if (data.assignedToId !== undefined && data.assignedToId !== existing.assignedToId) {
+    if (
+      data.assignedToId !== undefined &&
+      data.assignedToId !== existing.assignedToId
+    ) {
       const permission = await hasPermission(
         user.id,
         "calendar:assign_users",
@@ -80,14 +85,20 @@ export const PATCH = withRoute<{ id: string }>(
       where: { id },
       data: {
         ...(data.title !== undefined && { title: data.title }),
-        ...(data.description !== undefined && { description: data.description }),
-        ...(data.startDate !== undefined && { startDate: new Date(data.startDate) }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
+        ...(data.startDate !== undefined && {
+          startDate: new Date(data.startDate),
+        }),
         ...(data.endDate !== undefined && {
           endDate: data.endDate ? new Date(data.endDate) : null,
         }),
         ...(data.isAllDay !== undefined && { isAllDay: data.isAllDay }),
         ...(data.teamId !== undefined && { teamId: data.teamId }),
-        ...(data.assignedToId !== undefined && { assignedToId: data.assignedToId }),
+        ...(data.assignedToId !== undefined && {
+          assignedToId: data.assignedToId,
+        }),
       },
     });
 
@@ -104,33 +115,31 @@ export const PATCH = withRoute<{ id: string }>(
   },
 );
 
-export const DELETE = withRoute<{ id: string }>(
-  async ({ user, params }) => {
-    const { id } = params;
-    if (!CUID.test(id)) return apiError(400, "Invalid id");
+export const DELETE = withRoute<{ id: string }>(async ({ user, params }) => {
+  const { id } = params;
+  if (!CUID.test(id)) return apiError(400, "Invalid id");
 
-    const existing = await prisma.calendarEntry.findUnique({ where: { id } });
-    if (!existing) return apiError(404, "Not found");
+  const existing = await prisma.calendarEntry.findUnique({ where: { id } });
+  if (!existing) return apiError(404, "Not found");
 
-    const isOwner = existing.userId === user.id;
-    const permission = await hasPermission(
-      user.id,
-      isOwner ? "calendar:delete_own" : "calendar:delete_others",
-      existing.teamId ?? undefined,
-    );
-    if (!permission && !user.isAdmin) {
-      return apiError(403, "Forbidden");
-    }
+  const isOwner = existing.userId === user.id;
+  const permission = await hasPermission(
+    user.id,
+    isOwner ? "calendar:delete_own" : "calendar:delete_others",
+    existing.teamId ?? undefined,
+  );
+  if (!permission && !user.isAdmin) {
+    return apiError(403, "Forbidden");
+  }
 
-    await prisma.calendarEntry.delete({ where: { id } });
-    await logAudit({
-      actorId: user.id,
-      action: "delete",
-      entityType: "calendar_entry",
-      entityId: id,
-      teamId: existing.teamId ?? undefined,
-      metadata: { title: existing.title },
-    });
-    return NextResponse.json({ success: true });
-  },
-);
+  await prisma.calendarEntry.delete({ where: { id } });
+  await logAudit({
+    actorId: user.id,
+    action: "delete",
+    entityType: "calendar_entry",
+    entityId: id,
+    teamId: existing.teamId ?? undefined,
+    metadata: { title: existing.title },
+  });
+  return NextResponse.json({ success: true });
+});

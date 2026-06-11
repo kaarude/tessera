@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from "react";
 
-export function useKeyboardShortcuts(shortcuts: Record<string, (e: KeyboardEvent) => void>) {
+export function useKeyboardShortcuts(
+  shortcuts: Record<string, (e: KeyboardEvent) => void>,
+) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const key = `${e.metaKey || e.ctrlKey ? "Cmd+" : ""}${e.shiftKey ? "Shift+" : ""}${e.key}`;
@@ -25,7 +27,7 @@ export function useFocusTrap(active: boolean) {
 
     const container = ref.current;
     const focusable = container.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -49,7 +51,9 @@ export function useFocusTrap(active: boolean) {
 
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        const closeBtn = container.querySelector('[data-modal-close]') as HTMLElement;
+        const closeBtn = container.querySelector(
+          "[data-modal-close]",
+        ) as HTMLElement;
         closeBtn?.click();
       }
     }

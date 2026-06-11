@@ -8,6 +8,7 @@ import { useAppStore } from "@/lib/store";
 import { ALL_PERMISSIONS, PERMISSION_DESCRIPTIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function RolesPage() {
   const { currentTeamId } = useAppStore();
@@ -102,10 +103,14 @@ export default function RolesPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Roles & Permissions
             </h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Roles apply within the selected team. Platform permissions can
+              expose user, role, and audit data, so review them before saving.
+            </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className={cn(buttonVariants({ size: "lg" }), "px-4")}
           >
             <Plus size={16} />
             New Role
@@ -147,7 +152,7 @@ export default function RolesPage() {
                   createMutation.mutate({ ...newRole, teamId: currentTeamId })
                 }
                 disabled={!newRole.name || createMutation.isPending}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className={cn(buttonVariants(), "px-4")}
               >
                 {createMutation.isPending ? "Creating..." : "Create Role"}
               </button>
@@ -250,7 +255,7 @@ export default function RolesPage() {
                           ),
                         })
                       }
-                      className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                      className={cn(buttonVariants(), "px-4")}
                     >
                       <Check size={14} />
                       Save Permissions
@@ -288,7 +293,7 @@ export default function RolesPage() {
             </p>
             <button
               onClick={() => setShowCreate(true)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              className={cn(buttonVariants({ size: "sm" }), "mt-3 px-4")}
             >
               <Plus size={14} />
               Create a role

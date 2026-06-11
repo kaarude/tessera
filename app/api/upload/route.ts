@@ -6,13 +6,44 @@ import { deleteFromS3, uploadToS3 } from "@/lib/s3";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
+import { assertTrustedOrigin } from "@/lib/security";
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
+const MAX_USER_BYTES = 250 * 1024 * 1024;
+const ALLOWED_TYPES = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "text/plain",
+  "text/markdown",
+]);
+
+function hasExpectedSignature(buffer: Buffer, type: string) {
+  if (type.startsWith("text/")) return !buffer.includes(0);
+  if (type === "application/pdf")
+    return buffer.subarray(0, 5).toString() === "%PDF-";
+  if (type === "image/png")
+    return buffer
+      .subarray(0, 8)
+      .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  if (type === "image/jpeg") return buffer[0] === 0xff && buffer[1] === 0xd8;
+  if (type === "image/gif")
+    return ["GIF87a", "GIF89a"].includes(buffer.subarray(0, 6).toString());
+  if (type === "image/webp")
+    return (
+      buffer.subarray(0, 4).toString() === "RIFF" &&
+      buffer.subarray(8, 12).toString() === "WEBP"
+    );
+  return false;
+}
 
 export const runtime = "nodejs"; // Buffer + S3 SDK
 
 export async function POST(request: Request) {
   try {
+    assertTrustedOrigin(request);
     const user = await requireAuth();
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
@@ -25,11 +56,21 @@ export async function POST(request: Request) {
     if (file.size > MAX_BYTES) {
       return NextResponse.json(
         { error: `File too large (max ${MAX_BYTES / 1024 / 1024}MB)` },
-        { status: 413 }
+        { status: 413 },
       );
     }
     if (file.size === 0) {
       return NextResponse.json({ error: "Empty file" }, { status: 400 });
+    }
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return apiError(415, "File type is not allowed");
+    }
+    const usedBytes = await prisma.noteAttachment.aggregate({
+      where: { uploaderId: user.id },
+      _sum: { size: true },
+    });
+    if ((usedBytes._sum.size || 0) + file.size > MAX_USER_BYTES) {
+      return apiError(413, "Personal attachment quota exceeded");
     }
 
     // If a noteId is provided, the caller must own the note.
@@ -60,10 +101,11 @@ export async function POST(request: Request) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    if (!hasExpectedSignature(buffer, file.type)) {
+      return apiError(415, "File contents do not match the declared type");
+    }
     // S3 keys for unattached uploads (no noteId) go to a user-scoped prefix.
-    const keyPrefix = noteId
-      ? `notes/${noteId}`
-      : `uploads/${user.id}`;
+    const keyPrefix = noteId ? `notes/${noteId}` : `uploads/${user.id}`;
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 200);
     const key = `${keyPrefix}/${Date.now()}-${safeName}`;
 

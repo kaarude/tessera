@@ -42,10 +42,7 @@ export async function GET(request: Request) {
         {
           shares: {
             some: {
-              OR: [
-                { userId: user.id },
-                { teamId: { in: teamIds } },
-              ],
+              OR: [{ userId: user.id }, { teamId: { in: teamIds } }],
             },
           },
         },
@@ -56,7 +53,8 @@ export async function GET(request: Request) {
 
     if (teamId) {
       // Make sure the user is a member of the team they're filtering by.
-      if (!teamIds.includes(teamId)) return apiError(403, "Not a member of that team");
+      if (!teamIds.includes(teamId))
+        return apiError(403, "Not a member of that team");
       (where.AND as Prisma.NoteWhereInput[]).push({ teamId });
     }
     if (search) {
@@ -91,47 +89,50 @@ export async function GET(request: Request) {
   }
 }
 
-export const POST = withRoute(
-  async ({ user, body }) => {
-    const parsed = NoteCreateBody.safeParse(body);
-    if (!parsed.success) return apiError(400, "Invalid request", { details: parsed.error.issues });
+export const POST = withRoute(async ({ user, body }) => {
+  const parsed = NoteCreateBody.safeParse(body);
+  if (!parsed.success)
+    return apiError(400, "Invalid request", { details: parsed.error.issues });
 
-    const { title, content, teamId, isPrivate } = parsed.data;
+  const { title, content, teamId, isPrivate } = parsed.data;
 
-    // Permission: must have notes:create in the target team (or platform-wide).
-    const teamIdForPerm = teamId ?? null;
-    const allowed = await hasPermission(user.id, "notes:create", teamIdForPerm ?? undefined);
-    if (!allowed) {
-      return apiError(403, "Forbidden: notes:create required");
+  // Permission: must have notes:create in the target team (or platform-wide).
+  const teamIdForPerm = teamId ?? null;
+  const allowed = await hasPermission(
+    user.id,
+    "notes:create",
+    teamIdForPerm ?? undefined,
+  );
+  if (!allowed) {
+    return apiError(403, "Forbidden: notes:create required");
+  }
+
+  // If a teamId is set, the user must be a member of that team.
+  if (teamId) {
+    const isMember = user.memberships.some((m) => m.teamId === teamId);
+    if (!isMember && !user.isAdmin) {
+      return apiError(403, "Not a member of that team");
     }
+  }
 
-    // If a teamId is set, the user must be a member of that team.
-    if (teamId) {
-      const isMember = user.memberships.some((m) => m.teamId === teamId);
-      if (!isMember && !user.isAdmin) {
-        return apiError(403, "Not a member of that team");
-      }
-    }
+  const note = await prisma.note.create({
+    data: {
+      title,
+      content,
+      ownerId: user.id,
+      teamId: teamId ?? null,
+      isPrivate: isPrivate !== undefined ? isPrivate : true,
+    },
+  });
 
-    const note = await prisma.note.create({
-      data: {
-        title,
-        content,
-        ownerId: user.id,
-        teamId: teamId ?? null,
-        isPrivate: isPrivate !== undefined ? isPrivate : true,
-      },
-    });
+  await logAudit({
+    actorId: user.id,
+    action: "create",
+    entityType: "note",
+    entityId: note.id,
+    teamId: teamId ?? undefined,
+    metadata: { title },
+  });
 
-    await logAudit({
-      actorId: user.id,
-      action: "create",
-      entityType: "note",
-      entityId: note.id,
-      teamId: teamId ?? undefined,
-      metadata: { title },
-    });
-
-    return NextResponse.json(note, { status: 201 });
-  },
-);
+  return NextResponse.json(note, { status: 201 });
+});

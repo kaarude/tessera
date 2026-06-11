@@ -6,6 +6,7 @@ import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
 import type { Prisma } from "@prisma/client";
 import { CalendarCreateBody } from "@/lib/schemas";
+import { recurrenceDates } from "@/lib/recurrence";
 
 const CalendarListQuery = z.object({
   teamId: z.string().cuid().optional(),
@@ -66,50 +67,60 @@ export async function GET(request: Request) {
   }
 }
 
-export const POST = withRoute(
-  async ({ user, body }) => {
-    const parsed = CalendarCreateBody.safeParse(body);
-    if (!parsed.success) {
-      return apiError(400, "Invalid request", { details: parsed.error.issues });
-    }
-    const {
-      title,
-      description,
-      startDate,
-      endDate,
-      isAllDay,
-      teamId,
-      assignedToId,
-    } = parsed.data;
+export const POST = withRoute(async ({ user, body }) => {
+  const parsed = CalendarCreateBody.safeParse(body);
+  if (!parsed.success) {
+    return apiError(400, "Invalid request", { details: parsed.error.issues });
+  }
+  const {
+    title,
+    description,
+    startDate,
+    endDate,
+    isAllDay,
+    teamId,
+    assignedToId,
+    recurrenceRule,
+    recurrenceEnd,
+  } = parsed.data;
 
-    const allowed = await hasPermission(user.id, "calendar:create", teamId ?? undefined);
-    if (!allowed) return apiError(403, "Forbidden: calendar:create required");
+  const allowed = await hasPermission(
+    user.id,
+    "calendar:create",
+    teamId ?? undefined,
+  );
+  if (!allowed) return apiError(403, "Forbidden: calendar:create required");
 
-    if (teamId && !user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
-      return apiError(403, "Not a member of that team");
+  if (
+    teamId &&
+    !user.memberships.some((m) => m.teamId === teamId) &&
+    !user.isAdmin
+  ) {
+    return apiError(403, "Not a member of that team");
+  }
+  if (assignedToId) {
+    if (
+      !(await hasPermission(
+        user.id,
+        "calendar:assign_users",
+        teamId ?? undefined,
+      )) &&
+      !user.isAdmin
+    ) {
+      return apiError(403, "Forbidden: calendar:assign_users required");
     }
-    if (assignedToId) {
-      if (
-        !(await hasPermission(
-          user.id,
-          "calendar:assign_users",
-          teamId ?? undefined,
-        )) &&
-        !user.isAdmin
-      ) {
-        return apiError(403, "Forbidden: calendar:assign_users required");
+    if (teamId) {
+      const membership = await prisma.teamMembership.findUnique({
+        where: { userId_teamId: { userId: assignedToId, teamId } },
+      });
+      if (!membership) {
+        return apiError(400, "assignee is not a team member");
       }
-      if (teamId) {
-        const membership = await prisma.teamMembership.findUnique({
-          where: { userId_teamId: { userId: assignedToId, teamId } },
-        });
-        if (!membership) {
-          return apiError(400, "assignee is not a team member");
-        }
-      }
     }
+  }
 
-    const entry = await prisma.calendarEntry.create({
+  const entry = await prisma.$transaction(async (tx) => {
+    const parent = await tx.calendarEntry.create({
       data: {
         title,
         description: description ?? null,
@@ -119,18 +130,44 @@ export const POST = withRoute(
         userId: user.id,
         teamId: teamId ?? null,
         assignedToId: assignedToId ?? null,
+        recurrenceRule: recurrenceRule ?? null,
+        recurrenceEnd: recurrenceEnd ? new Date(recurrenceEnd) : null,
       },
     });
+    const duration = endDate
+      ? new Date(endDate).getTime() - new Date(startDate).getTime()
+      : 0;
+    const dates = recurrenceDates(
+      new Date(startDate),
+      recurrenceRule,
+      recurrenceEnd ? new Date(recurrenceEnd) : null,
+    );
+    if (dates.length) {
+      await tx.calendarEntry.createMany({
+        data: dates.map((date) => ({
+          title,
+          description: description ?? null,
+          startDate: date,
+          endDate: endDate ? new Date(date.getTime() + duration) : null,
+          isAllDay,
+          userId: user.id,
+          teamId: teamId ?? null,
+          assignedToId: assignedToId ?? null,
+          recurrenceParentId: parent.id,
+        })),
+      });
+    }
+    return parent;
+  });
 
-    await logAudit({
-      actorId: user.id,
-      action: "create",
-      entityType: "calendar_entry",
-      entityId: entry.id,
-      teamId: teamId ?? undefined,
-      metadata: { title },
-    });
+  await logAudit({
+    actorId: user.id,
+    action: "create",
+    entityType: "calendar_entry",
+    entityId: entry.id,
+    teamId: teamId ?? undefined,
+    metadata: { title },
+  });
 
-    return NextResponse.json(entry, { status: 201 });
-  },
-);
+  return NextResponse.json(entry, { status: 201 });
+});

@@ -15,6 +15,7 @@ import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { UnifiedSearch } from "./unified-search";
 
 export function TopBar({ user }: { user: any }) {
   const queryClient = useQueryClient();
@@ -161,6 +162,7 @@ export function TopBar({ user }: { user: any }) {
       </div>
 
       <div className="flex items-center gap-3">
+        <UnifiedSearch />
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotifOpen(!notifOpen)}
