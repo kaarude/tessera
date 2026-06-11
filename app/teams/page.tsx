@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Users, Shield, ArrowRight, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useAppStore } from "@/lib/store";
 import { toast } from "react-hot-toast";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export default function TeamsPage() {
+export default function TeamsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  const createRequested = use(searchParams).create === "1";
   const { currentTeamId, setCurrentTeamId } = useAppStore();
   const queryClient = useQueryClient();
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(createRequested);
   const [newTeam, setNewTeam] = useState({ name: "", description: "" });
 
   const { data: teams, isLoading } = useQuery({
@@ -52,7 +59,7 @@ export default function TeamsPage() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className={cn(buttonVariants({ size: "lg" }), "px-4")}
           >
             <Plus size={16} />
             New Team
@@ -92,7 +99,7 @@ export default function TeamsPage() {
               <button
                 onClick={() => createMutation.mutate(newTeam)}
                 disabled={!newTeam.name || createMutation.isPending}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className={cn(buttonVariants(), "px-4")}
               >
                 {createMutation.isPending ? "Creating..." : "Create Team"}
               </button>
@@ -152,7 +159,7 @@ export default function TeamsPage() {
             </p>
             <button
               onClick={() => setShowCreate(true)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+              className={cn(buttonVariants({ size: "sm" }), "mt-3 px-4")}
             >
               <Plus size={14} />
               Create a team

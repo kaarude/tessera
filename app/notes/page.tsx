@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
@@ -17,11 +17,18 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { useAppStore } from "@/lib/store";
 import { toast } from "react-hot-toast";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export default function NotesPage() {
+export default function NotesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  const createRequested = use(searchParams).create === "1";
   const { currentTeamId } = useAppStore();
   const [search, setSearch] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(createRequested);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newIsPrivate, setNewIsPrivate] = useState(true);
@@ -31,7 +38,7 @@ export default function NotesPage() {
     queryKey: ["notes", currentTeamId, search],
     queryFn: async () => {
       const res = await fetch(
-        `/api/notes?teamId=${currentTeamId || ""}&search=${encodeURIComponent(search)}`
+        `/api/notes?teamId=${currentTeamId || ""}&search=${encodeURIComponent(search)}`,
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
@@ -91,11 +98,13 @@ export default function NotesPage() {
       <div className="space-y-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Notes</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Notes
+            </h1>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            className={cn(buttonVariants({ size: "lg" }), "px-4")}
           >
             <Plus size={16} />
             New Note
@@ -103,7 +112,10 @@ export default function NotesPage() {
         </div>
 
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
           <input
             type="text"
             value={search}
@@ -162,7 +174,7 @@ export default function NotesPage() {
                     })
                   }
                   disabled={!newTitle.trim() || createMutation.isPending}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                  className={cn(buttonVariants(), "px-4")}
                 >
                   {createMutation.isPending ? "Creating..." : "Create"}
                 </button>
@@ -191,7 +203,10 @@ export default function NotesPage() {
                 className="group flex flex-col rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30"
               >
                 <div className="mb-3 flex items-start justify-between gap-2">
-                  <Link href={`/notes/${note.id}`} className="flex items-center gap-2 min-w-0 flex-1">
+                  <Link
+                    href={`/notes/${note.id}`}
+                    className="flex items-center gap-2 min-w-0 flex-1"
+                  >
                     <FileText size={18} className="shrink-0 text-primary" />
                     <span className="truncate text-sm font-semibold text-foreground hover:text-primary transition-colors">
                       {note.title}
@@ -199,9 +214,17 @@ export default function NotesPage() {
                   </Link>
                   <div className="flex items-center gap-1 shrink-0">
                     {note.isPrivate ? (
-                      <Lock size={13} className="text-muted-foreground" aria-label="Private" />
+                      <Lock
+                        size={13}
+                        className="text-muted-foreground"
+                        aria-label="Private"
+                      />
                     ) : (
-                      <Share2 size={13} className="text-emerald-400" aria-label="Shared" />
+                      <Share2
+                        size={13}
+                        className="text-emerald-400"
+                        aria-label="Shared"
+                      />
                     )}
                   </div>
                 </div>
@@ -210,7 +233,10 @@ export default function NotesPage() {
                 </p>
                 <div className="mt-auto flex items-center justify-between">
                   <span className="text-[10px] text-muted-foreground">
-                    {new Date(note.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    {new Date(note.updatedAt).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </span>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
@@ -223,7 +249,8 @@ export default function NotesPage() {
                     </button>
                     <button
                       onClick={() => {
-                        if (confirm("Delete this note? This cannot be undone.")) deleteMutation.mutate(note.id);
+                        if (confirm("Delete this note? This cannot be undone."))
+                          deleteMutation.mutate(note.id);
                       }}
                       className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       aria-label="Delete note"
@@ -238,13 +265,17 @@ export default function NotesPage() {
         ) : (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20">
             <Inbox size={40} className="mb-3 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">No notes found</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              No notes found
+            </p>
             {search ? (
-              <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Try a different search term
+              </p>
             ) : (
               <button
                 onClick={() => setShowCreate(true)}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                className={cn(buttonVariants({ size: "sm" }), "mt-3 px-4")}
               >
                 <Plus size={14} />
                 Create your first note

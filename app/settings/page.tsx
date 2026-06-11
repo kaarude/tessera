@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Lock, Bell, Save, User, Shield, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { toast } from "react-hot-toast";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -28,8 +30,10 @@ export default function SettingsPage() {
     const e: Record<string, string> = {};
     if (!currentPassword) e.currentPassword = "Current password is required";
     if (!newPassword) e.newPassword = "New password is required";
-    else if (newPassword.length < 8) e.newPassword = "Must be at least 8 characters";
-    if (newPassword !== confirmPassword) e.confirmPassword = "Passwords do not match";
+    else if (newPassword.length < 8)
+      e.newPassword = "Must be at least 8 characters";
+    if (newPassword !== confirmPassword)
+      e.confirmPassword = "Passwords do not match";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -85,7 +89,9 @@ export default function SettingsPage() {
     <AppShell>
       <div className="space-y-8 max-w-xl">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Settings
+          </h1>
         </div>
 
         {/* Profile */}
@@ -97,11 +103,15 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
               <span className="text-sm text-muted-foreground">Name</span>
-              <span className="text-sm font-medium text-foreground">{user?.name}</span>
+              <span className="text-sm font-medium text-foreground">
+                {user?.name}
+              </span>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
               <span className="text-sm text-muted-foreground">Email</span>
-              <span className="text-sm font-medium text-foreground">{user?.email}</span>
+              <span className="text-sm font-medium text-foreground">
+                {user?.email}
+              </span>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
               <span className="text-sm text-muted-foreground">Role</span>
@@ -127,64 +137,91 @@ export default function SettingsPage() {
           </div>
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">Current Password</label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Current Password
+              </label>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => {
                   setCurrentPassword(e.target.value);
-                  if (errors.currentPassword) setErrors((p) => ({ ...p, currentPassword: "" }));
+                  if (errors.currentPassword)
+                    setErrors((p) => ({ ...p, currentPassword: "" }));
                 }}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 placeholder="••••••••"
                 aria-invalid={!!errors.currentPassword}
-                aria-describedby={errors.currentPassword ? "current-password-error" : undefined}
+                aria-describedby={
+                  errors.currentPassword ? "current-password-error" : undefined
+                }
                 autoComplete="current-password"
               />
               {errors.currentPassword && (
-                <p id="current-password-error" className="mt-1 text-xs text-destructive">{errors.currentPassword}</p>
+                <p
+                  id="current-password-error"
+                  className="mt-1 text-xs text-destructive"
+                >
+                  {errors.currentPassword}
+                </p>
               )}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">New Password</label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                New Password
+              </label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => {
                   setNewPassword(e.target.value);
-                  if (errors.newPassword) setErrors((p) => ({ ...p, newPassword: "" }));
+                  if (errors.newPassword)
+                    setErrors((p) => ({ ...p, newPassword: "" }));
                 }}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 placeholder="••••••••"
                 aria-invalid={!!errors.newPassword}
-                aria-describedby={errors.newPassword ? "password-error" : undefined}
+                aria-describedby={
+                  errors.newPassword ? "password-error" : undefined
+                }
               />
               {errors.newPassword && (
-                <p id="password-error" className="mt-1 text-xs text-destructive">{errors.newPassword}</p>
+                <p
+                  id="password-error"
+                  className="mt-1 text-xs text-destructive"
+                >
+                  {errors.newPassword}
+                </p>
               )}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">Confirm Password</label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Confirm Password
+              </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
-                  if (errors.confirmPassword) setErrors((p) => ({ ...p, confirmPassword: "" }));
+                  if (errors.confirmPassword)
+                    setErrors((p) => ({ ...p, confirmPassword: "" }));
                 }}
                 className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 placeholder="••••••••"
                 aria-invalid={!!errors.confirmPassword}
-                aria-describedby={errors.confirmPassword ? "confirm-error" : undefined}
+                aria-describedby={
+                  errors.confirmPassword ? "confirm-error" : undefined
+                }
               />
               {errors.confirmPassword && (
-                <p id="confirm-error" className="mt-1 text-xs text-destructive">{errors.confirmPassword}</p>
+                <p id="confirm-error" className="mt-1 text-xs text-destructive">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              className={cn(buttonVariants({ size: "lg" }), "px-4")}
             >
               <Save size={16} />
               {loading ? "Updating..." : "Update Password"}
@@ -201,7 +238,9 @@ export default function SettingsPage() {
           <div className="rounded-lg border border-border bg-card p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-foreground">Browser notifications</p>
+                <p className="text-sm font-medium text-foreground">
+                  Browser notifications
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Get alerts for overdue tasks and important updates.
                 </p>

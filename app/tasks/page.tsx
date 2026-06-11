@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { use, useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -25,6 +25,7 @@ import { AppShell } from "@/components/app-shell";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
+import { buttonVariants } from "@/components/ui/button";
 
 interface Task {
   id: string;
@@ -179,13 +180,18 @@ function BoardColumn({
   );
 }
 
-export default function TasksPage() {
+export default function TasksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  const createRequested = use(searchParams).create === "1";
   const { currentTeamId } = useAppStore();
   const queryClient = useQueryClient();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [menuTask, setMenuTask] = useState<Task | null>(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(createRequested);
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -193,13 +199,19 @@ export default function TasksPage() {
     columnId: "",
   });
 
-  const { data: boards } = useQuery({
+  const {
+    data: boards,
+    isLoading: boardsLoading,
+    isError: boardsError,
+  } = useQuery({
     queryKey: ["boards", currentTeamId],
     queryFn: async () => {
       const res = await fetch(`/api/taskboards?teamId=${currentTeamId || ""}`);
-      if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load taskboard");
+      return data;
     },
+    enabled: !!currentTeamId,
   });
 
   const activeBoard = boards?.[0];
@@ -237,6 +249,28 @@ export default function TasksPage() {
   });
 
   const columns: Column[] = activeBoard?.columns || [];
+
+  const createBoardMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentTeamId) throw new Error("Select a team first");
+      const res = await fetch("/api/taskboards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Team taskboard",
+          teamId: currentTeamId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create taskboard");
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards", currentTeamId] });
+      toast.success("Taskboard created");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, ...data }: any) => {
@@ -316,24 +350,57 @@ export default function TasksPage() {
               Taskboard
             </h1>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Plus size={16} />
-            New Task
-          </button>
+          {activeBoard && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className={cn(buttonVariants({ size: "lg" }), "px-4")}
+            >
+              <Plus size={16} />
+              New Task
+            </button>
+          )}
         </div>
 
-        {!activeBoard && (
-          <div className="rounded-xl border border-dashed border-border py-16 text-center">
+        {boardsLoading && (
+          <div className="h-52 animate-pulse rounded-xl bg-muted" />
+        )}
+
+        {boardsError && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+            <p className="text-sm font-medium text-destructive">
+              The taskboard could not be loaded.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Check the server connection, then refresh this page.
+            </p>
+          </div>
+        )}
+
+        {!boardsLoading && !boardsError && !activeBoard && (
+          <div className="rounded-xl border border-border bg-card p-8 text-center">
             <Inbox
-              size={40}
+              size={32}
               className="mx-auto mb-3 text-muted-foreground/40"
             />
-            <p className="text-sm text-muted-foreground">
-              No taskboard found for this team.
+            <h2 className="text-base font-semibold text-foreground">
+              Create this team&apos;s taskboard
+            </h2>
+            <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+              A taskboard provides To Do, In Progress, Review, and Done columns.
+              Create it before adding the team&apos;s first task.
             </p>
+            <button
+              onClick={() => createBoardMutation.mutate()}
+              disabled={!currentTeamId || createBoardMutation.isPending}
+              className={cn(buttonVariants(), "mt-4 px-4")}
+            >
+              <Plus size={16} />
+              {createBoardMutation.isPending
+                ? "Creating taskboard..."
+                : currentTeamId
+                  ? "Create taskboard"
+                  : "Select a team first"}
+            </button>
           </div>
         )}
 
@@ -454,7 +521,7 @@ export default function TasksPage() {
         )}
 
         {/* Create Modal */}
-        {showCreate && (
+        {showCreate && activeBoard && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             role="dialog"
@@ -533,7 +600,7 @@ export default function TasksPage() {
                     disabled={
                       !newTask.title.trim() || createTaskMutation.isPending
                     }
-                    className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                    className={cn(buttonVariants(), "flex-1 px-4")}
                   >
                     {createTaskMutation.isPending
                       ? "Creating..."

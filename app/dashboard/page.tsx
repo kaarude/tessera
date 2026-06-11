@@ -41,8 +41,9 @@ export default function DashboardPage() {
       return res.json();
     },
   });
+  const hasTeam = (me?.memberships?.length || 0) > 0;
 
-  const { data: notesRaw } = useQuery<Note[]>({
+  const notesQuery = useQuery<Note[]>({
     queryKey: ["notes", currentTeamId],
     queryFn: async () => {
       const res = await fetch(`/api/notes?teamId=${currentTeamId || ""}`);
@@ -50,10 +51,12 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(data.error || "Failed");
       return data;
     },
+    enabled: hasTeam,
   });
+  const notesRaw = notesQuery.data;
   const notes = Array.isArray(notesRaw) ? notesRaw : [];
 
-  const { data: calendarRaw } = useQuery<CalendarEntry[]>({
+  const calendarQuery = useQuery<CalendarEntry[]>({
     queryKey: ["calendar", currentTeamId],
     queryFn: async () => {
       const now = new Date();
@@ -66,10 +69,12 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(data.error || "Failed");
       return data;
     },
+    enabled: hasTeam,
   });
+  const calendarRaw = calendarQuery.data;
   const calendar = Array.isArray(calendarRaw) ? calendarRaw : [];
 
-  const { data: tasksRaw } = useQuery<Task[]>({
+  const tasksQuery = useQuery<Task[]>({
     queryKey: ["tasks", currentTeamId],
     queryFn: async () => {
       const res = await fetch(`/api/tasks?teamId=${currentTeamId || ""}`);
@@ -77,7 +82,9 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(data.error || "Failed");
       return data;
     },
+    enabled: hasTeam,
   });
+  const tasksRaw = tasksQuery.data;
   const tasks = Array.isArray(tasksRaw) ? tasksRaw : [];
 
   const { data: notificationsRaw } = useQuery<Notification[]>({
@@ -100,6 +107,10 @@ export default function DashboardPage() {
 
   const hasAttention =
     unreadNotifications.length > 0 || overdueTasks.length > 0;
+  const isWorkspaceLoading =
+    notesQuery.isLoading || calendarQuery.isLoading || tasksQuery.isLoading;
+  const workspaceError =
+    notesQuery.isError || calendarQuery.isError || tasksQuery.isError;
 
   const stats = [
     { label: "Notes", value: notes.length, icon: FileText, href: "/notes" },
@@ -212,25 +223,41 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* First-run onboarding */}
-        {me?.memberships?.length === 0 && (
+        {!hasTeam && me && (
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <Users size={20} className="text-primary" />
               </div>
               <div className="flex-1">
-                <h2 className="text-sm font-semibold text-foreground">
-                  Welcome to Tessera
+                <h2 className="text-base font-semibold text-foreground">
+                  Set up your workspace
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Tessera is organized around teams. Create your first team to
-                  start adding notes, tasks, and calendar events.
+                  Start by creating a team. Tessera will use it to scope shared
+                  notes, events, tasks, roles, and audit activity.
                 </p>
+                <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
+                  {[
+                    ["1", "Create a team"],
+                    ["2", "Add shared work"],
+                    ["3", "Invite collaborators"],
+                  ].map(([number, label]) => (
+                    <li
+                      key={number}
+                      className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-muted-foreground"
+                    >
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-card text-[11px] font-semibold text-foreground">
+                        {number}
+                      </span>
+                      {label}
+                    </li>
+                  ))}
+                </ol>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link
-                    href="/teams"
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-xs font-medium text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                    href="/teams?create=1"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-popover px-3 py-2 text-xs font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
                   >
                     <Plus size={14} />
                     Create a team
@@ -249,186 +276,218 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Compact Stats */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {stats.map((stat) => (
-            <Link
-              key={stat.label}
-              href={stat.href}
-              className="group flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30"
-            >
-              <stat.icon
-                size={18}
-                className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
-              />
-              <div>
-                <p className="text-lg font-bold text-foreground leading-none">
-                  {stat.value}
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {stat.label}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {workspaceError && hasTeam && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+            <p className="text-sm font-medium text-destructive">
+              Some workspace data could not be loaded.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Check the server connection and refresh the page.
+            </p>
+          </div>
+        )}
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/notes"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            <Plus size={14} />
-            New Note
-          </Link>
-          <Link
-            href="/tasks"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            <CheckSquare size={14} />
-            New Task
-          </Link>
-          <Link
-            href="/calendar"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            <Calendar size={14} />
-            New Event
-          </Link>
-        </div>
+        {isWorkspaceLoading && hasTeam ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[1, 2, 3, 4].map((item) => (
+              <div
+                key={item}
+                className="h-[66px] animate-pulse rounded-lg bg-muted"
+              />
+            ))}
+          </div>
+        ) : hasTeam ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {stats.map((stat) => (
+              <Link
+                key={stat.label}
+                href={stat.href}
+                className="group flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary/30"
+              >
+                <stat.icon
+                  size={18}
+                  className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
+                />
+                <div>
+                  <p className="text-lg font-bold text-foreground leading-none">
+                    {stat.value}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {stat.label}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        {hasTeam && !isWorkspaceLoading && (
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/notes?create=1"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <Plus size={14} />
+              New Note
+            </Link>
+            <Link
+              href="/tasks?create=1"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <CheckSquare size={14} />
+              New Task
+            </Link>
+            <Link
+              href="/calendar?create=1"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <Calendar size={14} />
+              New Event
+            </Link>
+          </div>
+        )}
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Recent Notes */}
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                Recent Notes
-              </h2>
-              <Link
-                href="/notes"
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                View all
-              </Link>
-            </div>
-            <div className="space-y-1">
-              {notes.length > 0 ? (
-                notes.slice(0, 6).map((note: Note) => (
-                  <Link
-                    key={note.id}
-                    href={`/notes/${note.id}`}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted group"
-                  >
-                    <FileText
-                      size={15}
-                      className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
+        {hasTeam && !isWorkspaceLoading && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Recent Notes */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-foreground">
+                  Recent Notes
+                </h2>
+                <Link
+                  href="/notes"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  View all
+                </Link>
+              </div>
+              <div className="space-y-1">
+                {notes.length > 0 ? (
+                  notes.slice(0, 6).map((note: Note) => (
+                    <Link
+                      key={note.id}
+                      href={`/notes/${note.id}`}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted group"
+                    >
+                      <FileText
+                        size={15}
+                        className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-foreground truncate">
+                          {note.title}
+                        </span>
+                        <span className="block text-[11px] text-muted-foreground truncate">
+                          {note.content?.slice(0, 60) || "No content"}
+                        </span>
+                      </div>
+                      {note.isPrivate && (
+                        <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          Private
+                        </span>
+                      )}
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {new Date(note.updatedAt).toLocaleDateString(
+                          undefined,
+                          {
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
+                      </span>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="rounded-lg border border-dashed border-border py-8 text-center">
+                    <Inbox
+                      size={24}
+                      className="mx-auto mb-2 text-muted-foreground/40"
                     />
-                    <div className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-foreground truncate">
-                        {note.title}
-                      </span>
-                      <span className="block text-[11px] text-muted-foreground truncate">
-                        {note.content?.slice(0, 60) || "No content"}
-                      </span>
-                    </div>
-                    {note.isPrivate && (
-                      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        Private
-                      </span>
-                    )}
-                    <span className="shrink-0 text-[11px] text-muted-foreground">
-                      {new Date(note.updatedAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </Link>
-                ))
-              ) : (
-                <div className="rounded-lg border border-dashed border-border py-8 text-center">
-                  <Inbox
-                    size={24}
-                    className="mx-auto mb-2 text-muted-foreground/40"
-                  />
-                  <p className="text-sm text-muted-foreground">No notes yet</p>
-                  <Link
-                    href="/notes"
-                    className="mt-1 inline-block text-xs text-primary hover:underline"
-                  >
-                    Create your first note
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Upcoming Events */}
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                Upcoming
-              </h2>
-              <Link
-                href="/calendar"
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                Calendar
-              </Link>
-            </div>
-            <div className="space-y-1">
-              {calendar.length > 0 ? (
-                calendar.slice(0, 5).map((event: CalendarEntry) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted transition-colors"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <span className="text-[9px] font-bold uppercase leading-none">
-                        {new Date(event.startDate).toLocaleDateString("en-US", {
-                          month: "short",
-                        })}
-                      </span>
-                      <span className="text-sm font-bold leading-none">
-                        {new Date(event.startDate).getDate()}
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {event.title}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {event.isAllDay
-                          ? "All day"
-                          : new Date(event.startDate).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                      </p>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      No notes yet
+                    </p>
+                    <Link
+                      href="/notes?create=1"
+                      className="mt-1 inline-block text-xs text-primary hover:underline"
+                    >
+                      Create your first note
+                    </Link>
                   </div>
-                ))
-              ) : (
-                <div className="rounded-lg border border-dashed border-border py-8 text-center">
-                  <Calendar
-                    size={24}
-                    className="mx-auto mb-2 text-muted-foreground/40"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    No upcoming events
-                  </p>
-                  <Link
-                    href="/calendar"
-                    className="mt-1 inline-block text-xs text-primary hover:underline"
-                  >
-                    Add an event
-                  </Link>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+
+            {/* Upcoming Events */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-foreground">
+                  Upcoming
+                </h2>
+                <Link
+                  href="/calendar"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Calendar
+                </Link>
+              </div>
+              <div className="space-y-1">
+                {calendar.length > 0 ? (
+                  calendar.slice(0, 5).map((event: CalendarEntry) => (
+                    <div
+                      key={event.id}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted transition-colors"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <span className="text-[9px] font-bold uppercase leading-none">
+                          {new Date(event.startDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                            },
+                          )}
+                        </span>
+                        <span className="text-sm font-bold leading-none">
+                          {new Date(event.startDate).getDate()}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {event.title}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {event.isAllDay
+                            ? "All day"
+                            : new Date(event.startDate).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-lg border border-dashed border-border py-8 text-center">
+                    <Calendar
+                      size={24}
+                      className="mx-auto mb-2 text-muted-foreground/40"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      No upcoming events
+                    </p>
+                    <Link
+                      href="/calendar?create=1"
+                      className="mt-1 inline-block text-xs text-primary hover:underline"
+                    >
+                      Add an event
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </AppShell>
   );

@@ -6,6 +6,7 @@ import { Plus, Users, X, Trash2, RefreshCw, Shield } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { toast } from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
@@ -99,10 +100,14 @@ export default function UsersPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Users
             </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Platform administrators can access every team and manage all
+              users. Grant this privilege only to trusted operators.
+            </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className={cn(buttonVariants({ size: "lg" }), "px-4")}
           >
             <Plus size={16} />
             New User
@@ -166,6 +171,12 @@ export default function UsersPage() {
                   Grant admin privileges
                 </label>
               </div>
+              {newUser.isAdmin && (
+                <p className="rounded-lg bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                  Administrators can manage every user, team, role, and audit
+                  log across the installation.
+                </p>
+              )}
               <div>
                 <label className="mb-2 block text-sm text-muted-foreground">
                   Assign to teams
@@ -209,7 +220,7 @@ export default function UsersPage() {
                   !newUser.password ||
                   createMutation.isPending
                 }
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className={cn(buttonVariants(), "px-4")}
               >
                 {createMutation.isPending ? "Creating..." : "Create User"}
               </button>
@@ -324,7 +335,7 @@ export default function UsersPage() {
                 </p>
                 <button
                   onClick={() => setShowCreate(true)}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+                  className={cn(buttonVariants({ size: "sm" }), "mt-3 px-4")}
                 >
                   <Plus size={14} />
                   Create a user
