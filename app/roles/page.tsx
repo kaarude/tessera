@@ -82,7 +82,6 @@ export default function RolesPage() {
       (p) =>
         p.startsWith("users:") ||
         p.startsWith("teams:") ||
-        p.startsWith("groups:") ||
         p.startsWith("roles:") ||
         p.startsWith("admin:") ||
         p === "audit:view_all",

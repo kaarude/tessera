@@ -9,7 +9,6 @@ import { TaskCreateBody } from "@/lib/schemas";
 
 const TaskListQuery = z.object({
   teamId: z.string().cuid().optional(),
-  groupId: z.string().cuid().optional(),
   boardId: z.string().cuid().optional(),
 });
 
@@ -19,11 +18,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const parsed = TaskListQuery.safeParse({
       teamId: searchParams.get("teamId") ?? undefined,
-      groupId: searchParams.get("groupId") ?? undefined,
       boardId: searchParams.get("boardId") ?? undefined,
     });
     if (!parsed.success) return apiError(400, "Invalid query");
-    const { teamId, groupId, boardId } = parsed.data;
+    const { teamId, boardId } = parsed.data;
 
     const where: Prisma.TaskWhereInput = {};
 
@@ -45,14 +43,6 @@ export async function GET(request: Request) {
         { teamId: { in: user.memberships.map((m) => m.teamId) } },
       ];
     }
-    if (groupId) where.groupId = groupId;
-    if (
-      groupId &&
-      !user.isAdmin &&
-      !(await hasPermission(user.id, "tasks:view_group", teamId))
-    ) {
-      return apiError(403, "Forbidden: tasks:view_group required");
-    }
     if (boardId) where.boardId = boardId;
 
     const tasks = await prisma.task.findMany({
@@ -60,7 +50,6 @@ export async function GET(request: Request) {
       include: {
         assignee: { select: { id: true, name: true } },
         team: { select: { id: true, name: true } },
-        group: { select: { id: true, name: true } },
         board: { select: { id: true, name: true } },
         column: { select: { id: true, name: true } },
         creator: { select: { id: true, name: true } },
@@ -87,7 +76,6 @@ export const POST = withRoute(
       dueDate,
       assigneeId,
       teamId,
-      groupId,
       boardId,
       columnId,
       position,
@@ -107,12 +95,6 @@ export const POST = withRoute(
     if (!column || column.board.id !== boardId || column.board.teamId !== teamId) {
       return apiError(400, "column/board/team mismatch");
     }
-    if (groupId) {
-      const group = await prisma.group.findUnique({ where: { id: groupId } });
-      if (!group || group.teamId !== teamId) {
-        return apiError(400, "group/team mismatch");
-      }
-    }
     if (assigneeId) {
       const membership = await prisma.teamMembership.findUnique({
         where: { userId_teamId: { userId: assigneeId, teamId } },
@@ -128,7 +110,6 @@ export const POST = withRoute(
         dueDate: dueDate ? new Date(dueDate) : null,
         assigneeId: assigneeId ?? null,
         teamId,
-        groupId: groupId ?? null,
         boardId,
         columnId,
         position,
@@ -142,7 +123,6 @@ export const POST = withRoute(
       entityType: "task",
       entityId: task.id,
       teamId,
-      groupId: groupId ?? undefined,
       metadata: { title, columnId },
     });
 

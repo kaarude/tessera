@@ -7,7 +7,6 @@ import type { Prisma } from "@prisma/client";
 
 const Query = z.object({
   teamId: z.string().cuid().optional(),
-  groupId: z.string().cuid().optional(),
   actorId: z.string().cuid().optional(),
   action: z.string().max(50).optional(),
   page: z.coerce.number().int().min(1).default(1),
@@ -21,18 +20,16 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const parsed = Query.safeParse({
       teamId: searchParams.get("teamId") ?? undefined,
-      groupId: searchParams.get("groupId") ?? undefined,
       actorId: searchParams.get("actorId") ?? undefined,
       action: searchParams.get("action") ?? undefined,
       page: searchParams.get("page") ?? undefined,
       limit: searchParams.get("limit") ?? undefined,
     });
     if (!parsed.success) return apiError(400, "Invalid query");
-    const { teamId, groupId, actorId, action, page, limit } = parsed.data;
+    const { teamId, actorId, action, page, limit } = parsed.data;
 
     const where: Prisma.AuditLogWhereInput = {};
     if (teamId) where.teamId = teamId;
-    if (groupId) where.groupId = groupId;
     if (actorId) where.actorId = actorId;
     if (action) where.action = action;
 
@@ -42,7 +39,6 @@ export async function GET(request: Request) {
         include: {
           actor: { select: { id: true, name: true, email: true } },
           team: { select: { id: true, name: true } },
-          group: { select: { id: true, name: true } },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,

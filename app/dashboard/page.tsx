@@ -50,7 +50,6 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(data.error || "Failed");
       return data;
     },
-    enabled: !!currentTeamId,
   });
   const notes = Array.isArray(notesRaw) ? notesRaw : [];
 
@@ -67,7 +66,6 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(data.error || "Failed");
       return data;
     },
-    enabled: !!currentTeamId,
   });
   const calendar = Array.isArray(calendarRaw) ? calendarRaw : [];
 
@@ -79,7 +77,6 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(data.error || "Failed");
       return data;
     },
-    enabled: !!currentTeamId,
   });
   const tasks = Array.isArray(tasksRaw) ? tasksRaw : [];
 

@@ -27,14 +27,6 @@ export type Team = {
   ownerId: string;
 };
 
-export type Group = {
-  id: string;
-  name: string;
-  description: string | null;
-  teamId: string;
-  team?: { id: string; name: string } | null;
-};
-
 export type Role = {
   id: string;
   name: string;
@@ -62,13 +54,11 @@ export type Note = {
   content: string;
   ownerId: string;
   teamId: string | null;
-  groupId: string | null;
   isPrivate: boolean;
   createdAt: string;
   updatedAt: string;
   owner: { id: string; name: string };
   team: { id: string; name: string } | null;
-  group: { id: string; name: string } | null;
   shares: {
     id: string;
     userId: string | null;
@@ -97,7 +87,6 @@ export type Task = {
   dueDate: string | null;
   assigneeId: string | null;
   teamId: string;
-  groupId: string | null;
   boardId: string;
   columnId: string;
   position: number;
@@ -106,7 +95,6 @@ export type Task = {
   updatedAt: string;
   assignee: { id: string; name: string } | null;
   team: { id: string; name: string } | null;
-  group: { id: string; name: string } | null;
   board: { id: string; name: string };
   column: { id: string; name: string };
   creator: { id: string; name: string };
@@ -131,11 +119,9 @@ export type CalendarEntry = {
   isAllDay: boolean;
   userId: string;
   teamId: string | null;
-  groupId: string | null;
   assignedToId: string | null;
   user: { id: string; name: string };
   team: { id: string; name: string } | null;
-  group: { id: string; name: string } | null;
   assignedTo: { id: string; name: string } | null;
 };
 
@@ -158,12 +144,10 @@ export type AuditLog = {
   entityType: string;
   entityId: string;
   teamId: string | null;
-  groupId: string | null;
   metadata: unknown;
   beforeData: unknown;
   afterData: unknown;
   createdAt: string;
   actor: { id: string; name: string; email: string };
   team: { id: string; name: string } | null;
-  group: { id: string; name: string } | null;
 };

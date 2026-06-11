@@ -22,7 +22,6 @@ export async function GET(
       include: {
         owner: { select: { id: true, name: true } },
         team: { select: { id: true, name: true } },
-        group: { select: { id: true, name: true } },
         shares: {
           include: {
             user: { select: { id: true, name: true } },
@@ -94,12 +93,6 @@ export const PATCH = withRoute<{ id: string }>(
     ) {
       return apiError(403, "Not a member of the target team");
     }
-    if (data.groupId) {
-      const group = await prisma.group.findUnique({ where: { id: data.groupId } });
-      if (!group || group.teamId !== targetTeamId) {
-        return apiError(400, "group/team mismatch");
-      }
-    }
 
     const note = await prisma.note.update({
       where: { id },
@@ -108,7 +101,6 @@ export const PATCH = withRoute<{ id: string }>(
         ...(data.content !== undefined && { content: data.content }),
         ...(data.isPrivate !== undefined && { isPrivate: data.isPrivate }),
         ...(data.teamId !== undefined && { teamId: data.teamId }),
-        ...(data.groupId !== undefined && { groupId: data.groupId }),
       },
     });
 

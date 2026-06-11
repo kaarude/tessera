@@ -17,7 +17,6 @@ import {
   Clock,
   User,
   Users,
-  ArrowRightLeft,
   Trash2,
   X,
   Inbox,
@@ -35,7 +34,6 @@ interface Task {
   dueDate?: string;
   assignee?: { id: string; name: string } | null;
   team?: { id: string; name: string } | null;
-  group?: { id: string; name: string } | null;
   columnId: string;
   position: number;
 }
@@ -238,15 +236,6 @@ export default function TasksPage() {
     },
   });
 
-  const { data: groups } = useQuery({
-    queryKey: ["groups", currentTeamId],
-    queryFn: async () => {
-      const res = await fetch(`/api/groups?teamId=${currentTeamId || ""}`);
-      if (!res.ok) return [];
-      return res.json();
-    },
-  });
-
   const columns: Column[] = activeBoard?.columns || [];
 
   const updateTaskMutation = useMutation({
@@ -436,27 +425,6 @@ export default function TasksPage() {
                 >
                   <Users size={14} />
                   {team.name}
-                </button>
-              ))}
-              <div className="my-1 border-t border-border" />
-              <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Move to group
-              </div>
-              {groups?.map((group: any) => (
-                <button
-                  key={group.id}
-                  onClick={() => {
-                    updateTaskMutation.mutate({
-                      id: menuTask.id,
-                      groupId: group.id,
-                    });
-                    setMenuTask(null);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
-                  role="menuitem"
-                >
-                  <ArrowRightLeft size={14} />
-                  {group.name}
                 </button>
               ))}
               <div className="my-1 border-t border-border" />

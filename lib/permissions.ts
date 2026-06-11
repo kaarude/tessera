@@ -5,9 +5,6 @@ export const PLATFORM_PERMISSIONS = [
   "teams:create",
   "teams:edit",
   "teams:delete",
-  "groups:create",
-  "groups:edit",
-  "groups:delete",
   "roles:create",
   "roles:edit",
   "roles:delete",
@@ -49,16 +46,10 @@ export const TASK_PERMISSIONS = [
   "tasks:move_columns",
   "tasks:reassign_users",
   "tasks:reassign_teams",
-  "tasks:move_groups",
   "tasks:view_team",
-  "tasks:view_group",
 ];
 
-export const AUDIT_PERMISSIONS = [
-  "audit:view_team",
-  "audit:view_group",
-  "audit:view_all",
-];
+export const AUDIT_PERMISSIONS = ["audit:view_team", "audit:view_all"];
 
 export const ALL_PERMISSIONS = [
   ...PLATFORM_PERMISSIONS,
@@ -75,9 +66,6 @@ export const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "teams:create": "Create new teams",
   "teams:edit": "Rename or update team details",
   "teams:delete": "Delete teams and all their data",
-  "groups:create": "Create groups within a team",
-  "groups:edit": "Rename or update groups",
-  "groups:delete": "Delete groups",
   "roles:create": "Create custom roles",
   "roles:edit": "Modify role permissions",
   "roles:delete": "Delete custom roles",
@@ -111,9 +99,6 @@ export const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "tasks:move_columns": "Move tasks between columns",
   "tasks:reassign_users": "Reassign tasks to other users",
   "tasks:reassign_teams": "Reassign tasks to other teams",
-  "tasks:move_groups": "Move tasks between groups",
   "tasks:view_team": "View tasks in your team",
-  "tasks:view_group": "View tasks in your group",
   "audit:view_team": "View audit logs for your team",
-  "audit:view_group": "View audit logs for your group",
 };

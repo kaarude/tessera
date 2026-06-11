@@ -1,0 +1,83 @@
+- generic [ref=e1]:
+  - generic [ref=e234]:
+    - generic:
+      - link "Skip to main content" [ref=e235] [cursor=pointer]:
+        - /url: "#main-content"
+      - complementary [ref=e236]:
+        - generic [ref=e237]:
+          - link "Tessera logo Tessera":
+            - /url: /dashboard
+            - img "Tessera logo"
+            - generic: Tessera
+          - button "Expand sidebar" [active] [ref=e349]:
+            - img [ref=e350]
+        - navigation "Main navigation" [ref=e248]:
+          - list [ref=e249]:
+            - listitem [ref=e250]:
+              - link "Dashboard" [ref=e251] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e252]
+            - listitem [ref=e258]:
+              - link "Notes" [ref=e259] [cursor=pointer]:
+                - /url: /notes
+                - img [ref=e260]
+            - listitem [ref=e264]:
+              - link "Calendar" [ref=e265] [cursor=pointer]:
+                - /url: /calendar
+                - img [ref=e266]
+            - listitem [ref=e269]:
+              - link "Taskboard" [ref=e270] [cursor=pointer]:
+                - /url: /tasks
+                - img [ref=e271]
+            - listitem [ref=e275]:
+              - link "Teams" [ref=e276] [cursor=pointer]:
+                - /url: /teams
+                - img [ref=e277]
+            - listitem [ref=e283]:
+              - link "Groups" [ref=e284] [cursor=pointer]:
+                - /url: /groups
+                - img [ref=e285]
+            - listitem [ref=e291]:
+              - link "Roles" [ref=e292] [cursor=pointer]:
+                - /url: /roles
+                - img [ref=e293]
+            - listitem [ref=e296]:
+              - link "Audit Logs" [ref=e297] [cursor=pointer]:
+                - /url: /audit
+                - img [ref=e298]
+            - listitem [ref=e302]:
+              - link "Users" [ref=e303] [cursor=pointer]:
+                - /url: /users
+                - img [ref=e304]
+        - generic [ref=e310]:
+          - link "Settings" [ref=e311] [cursor=pointer]:
+            - /url: /settings
+            - img [ref=e312]
+          - button "Logout" [ref=e316]:
+            - img [ref=e317]
+    - generic [ref=e321]:
+      - banner [ref=e322]:
+        - link "Create a team" [ref=e324] [cursor=pointer]:
+          - /url: /teams
+          - img [ref=e325]
+          - text: Create a team
+        - generic [ref=e326]:
+          - button "Notifications, 0 unread" [ref=e328]:
+            - img [ref=e329]
+          - generic [ref=e332]:
+            - generic [ref=e333]: A
+            - generic [ref=e334]: Admin
+      - main [ref=e335]:
+        - generic [ref=e337]:
+          - generic [ref=e338]:
+            - heading "Roles & Permissions" [level=1] [ref=e340]
+            - button "New Role" [ref=e341]:
+              - img [ref=e342]
+              - text: New Role
+          - generic [ref=e343]:
+            - img [ref=e344]
+            - paragraph [ref=e346]: No roles yet
+            - button "Create a role" [ref=e347]:
+              - img [ref=e348]
+              - text: Create a role
+  - alert [ref=e194]

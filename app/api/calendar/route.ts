@@ -55,7 +55,6 @@ export async function GET(request: Request) {
       include: {
         user: { select: { id: true, name: true } },
         team: { select: { id: true, name: true } },
-        group: { select: { id: true, name: true } },
         assignedTo: { select: { id: true, name: true } },
       },
       orderBy: { startDate: "asc" },
@@ -80,7 +79,6 @@ export const POST = withRoute(
       endDate,
       isAllDay,
       teamId,
-      groupId,
       assignedToId,
     } = parsed.data;
 
@@ -89,12 +87,6 @@ export const POST = withRoute(
 
     if (teamId && !user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
       return apiError(403, "Not a member of that team");
-    }
-    if (groupId) {
-      const group = await prisma.group.findUnique({ where: { id: groupId } });
-      if (!group || group.teamId !== teamId) {
-        return apiError(400, "group/team mismatch");
-      }
     }
     if (assignedToId) {
       if (
@@ -126,7 +118,6 @@ export const POST = withRoute(
         isAllDay,
         userId: user.id,
         teamId: teamId ?? null,
-        groupId: groupId ?? null,
         assignedToId: assignedToId ?? null,
       },
     });

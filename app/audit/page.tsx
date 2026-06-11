@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 export default function AuditPage() {
   const [filters, setFilters] = useState({
     teamId: "",
-    groupId: "",
     actorId: "",
     action: "",
     page: 1,
@@ -20,7 +19,6 @@ export default function AuditPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.teamId) params.set("teamId", filters.teamId);
-      if (filters.groupId) params.set("groupId", filters.groupId);
       if (filters.actorId) params.set("actorId", filters.actorId);
       if (filters.action) params.set("action", filters.action);
       params.set("page", String(filters.page));
@@ -33,16 +31,6 @@ export default function AuditPage() {
     queryKey: ["teams"],
     queryFn: async () => {
       const res = await fetch("/api/teams");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Request failed");
-      return data;
-    },
-  });
-
-  const { data: groups } = useQuery({
-    queryKey: ["groups"],
-    queryFn: async () => {
-      const res = await fetch("/api/groups");
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
       return data;
@@ -82,16 +70,6 @@ export default function AuditPage() {
             <option value="">All Teams</option>
             {teams?.map((t: any) => (
               <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-          <select
-            value={filters.groupId}
-            onChange={(e) => setFilters({ ...filters, groupId: e.target.value, page: 1 })}
-            className="rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground outline-none focus:border-primary"
-          >
-            <option value="">All Groups</option>
-            {groups?.map((g: any) => (
-              <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </select>
           <select

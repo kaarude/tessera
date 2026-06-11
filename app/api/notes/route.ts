@@ -73,7 +73,6 @@ export async function GET(request: Request) {
       include: {
         owner: { select: { id: true, name: true } },
         team: { select: { id: true, name: true } },
-        group: { select: { id: true, name: true } },
         shares: {
           include: {
             user: { select: { id: true, name: true } },
@@ -97,7 +96,7 @@ export const POST = withRoute(
     const parsed = NoteCreateBody.safeParse(body);
     if (!parsed.success) return apiError(400, "Invalid request", { details: parsed.error.issues });
 
-    const { title, content, teamId, groupId, isPrivate } = parsed.data;
+    const { title, content, teamId, isPrivate } = parsed.data;
 
     // Permission: must have notes:create in the target team (or platform-wide).
     const teamIdForPerm = teamId ?? null;
@@ -113,12 +112,6 @@ export const POST = withRoute(
         return apiError(403, "Not a member of that team");
       }
     }
-    if (groupId) {
-      const group = await prisma.group.findUnique({ where: { id: groupId } });
-      if (!group || group.teamId !== teamId) {
-        return apiError(400, "group/team mismatch");
-      }
-    }
 
     const note = await prisma.note.create({
       data: {
@@ -126,7 +119,6 @@ export const POST = withRoute(
         content,
         ownerId: user.id,
         teamId: teamId ?? null,
-        groupId: groupId ?? null,
         isPrivate: isPrivate !== undefined ? isPrivate : true,
       },
     });
@@ -137,7 +129,6 @@ export const POST = withRoute(
       entityType: "note",
       entityId: note.id,
       teamId: teamId ?? undefined,
-      groupId: groupId ?? undefined,
       metadata: { title },
     });
 
