@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { useTheme } from "next-themes";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./topbar";
 import { KeyboardShortcutsModal } from "./keyboard-shortcuts-modal";
@@ -12,7 +13,9 @@ import { cn } from "@/lib/utils";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { sidebarOpen, mobileMenuOpen, setMobileMenuOpen } = useAppStore();
+  const { sidebarOpen, mobileMenuOpen, setMobileMenuOpen, setTheme } =
+    useAppStore();
+  const { setTheme: setNextTheme } = useTheme();
 
   const { data: user, isLoading } = useQuery({
     queryKey: ["me"],
@@ -29,6 +32,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       router.push("/login");
     }
   }, [user, isLoading, pathname, router]);
+
+  useEffect(() => {
+    if (user && !user.isAdmin && user.theme) {
+      setTheme(user.theme);
+      setNextTheme(user.theme);
+    }
+  }, [user, setTheme, setNextTheme]);
 
   if (isLoading) {
     return (

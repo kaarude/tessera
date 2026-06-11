@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Lock,
   Bell,
@@ -11,6 +11,9 @@ import {
   CheckCircle2,
   KeyRound,
   Copy,
+  Sun,
+  Moon,
+  Camera,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { toast } from "react-hot-toast";
@@ -18,6 +21,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
+  const queryClient = useQueryClient();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,6 +31,9 @@ export default function SettingsPage() {
   const [mfaSecret, setMfaSecret] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [nameEdit, setNameEdit] = useState("");
+  const [nameEditing, setNameEditing] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ["me"],
@@ -122,11 +129,114 @@ export default function SettingsPage() {
             <h2 className="font-semibold">Profile</h2>
           </div>
           <div className="space-y-2">
+            {/* Avatar — non-admins only */}
+            {!user?.isAdmin && (
+              <div className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3">
+                <div className="relative">
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="h-16 w-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-lg font-bold text-muted-foreground">
+                      {user?.name?.charAt(0).toUpperCase() || "U"}
+                    </div>
+                  )}
+                  <label className="absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">
+                    <Camera size={12} />
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="sr-only"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setAvatarUploading(true);
+                        const formData = new FormData();
+                        formData.append("avatar", file);
+                        try {
+                          const res = await fetch("/api/users/me/avatar", {
+                            method: "POST",
+                            body: formData,
+                          });
+                          const data = await res.json();
+                          if (!res.ok) {
+                            toast.error(data.error || "Upload failed");
+                            return;
+                          }
+                          queryClient.invalidateQueries({ queryKey: ["me"] });
+                          toast.success("Avatar updated");
+                        } catch {
+                          toast.error("Upload failed");
+                        } finally {
+                          setAvatarUploading(false);
+                        }
+                      }}
+                      disabled={avatarUploading}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Photo</p>
+                  <p className="text-xs text-muted-foreground">
+                    {avatarUploading
+                      ? "Uploading..."
+                      : "JPG, PNG, WebP, GIF — max 2MB"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Name — editable for non-admins */}
             <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
               <span className="text-sm text-muted-foreground">Name</span>
-              <span className="text-sm font-medium text-foreground">
-                {user?.name}
-              </span>
+              {nameEditing ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    value={nameEdit}
+                    onChange={(e) => setNameEdit(e.target.value)}
+                    className="rounded-lg border border-border bg-muted px-2 py-1 text-sm outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!nameEdit.trim()) return;
+                      const res = await fetch("/api/users/me", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: nameEdit.trim() }),
+                      });
+                      if (res.ok) {
+                        queryClient.invalidateQueries({ queryKey: ["me"] });
+                        toast.success("Name updated");
+                        setNameEditing(false);
+                      } else {
+                        toast.error("Failed to update name");
+                      }
+                    }}
+                    className={cn(buttonVariants({ size: "sm" }))}
+                  >
+                    <Save size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setNameEdit(user?.name || "");
+                    setNameEditing(true);
+                  }}
+                  className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                >
+                  {user?.name}
+                  {!user?.isAdmin && (
+                    <span className="text-xs text-muted-foreground">
+                      (Edit)
+                    </span>
+                  )}
+                </button>
+              )}
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
               <span className="text-sm text-muted-foreground">Email</span>
@@ -147,6 +257,46 @@ export default function SettingsPage() {
                 )}
               </span>
             </div>
+
+            {/* Theme — non-admins only */}
+            {!user?.isAdmin && (
+              <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
+                <span className="text-sm text-muted-foreground">Theme</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      const next = user?.theme === "light" ? "dark" : "light";
+                      const res = await fetch("/api/users/me", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ theme: next }),
+                      });
+                      if (res.ok) {
+                        queryClient.invalidateQueries({ queryKey: ["me"] });
+                        toast.success(
+                          next === "light" ? "Light mode on" : "Dark mode on",
+                        );
+                      } else {
+                        toast.error("Failed to switch theme");
+                      }
+                    }}
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    {user?.theme === "light" ? (
+                      <>
+                        <Sun size={14} />
+                        Light
+                      </>
+                    ) : (
+                      <>
+                        <Moon size={14} />
+                        Dark
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

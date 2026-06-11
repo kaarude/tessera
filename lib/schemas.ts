@@ -215,6 +215,14 @@ export const CalendarUpdateBody = z
   })
   .strict();
 
+export const UserProfileUpdateBody = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    avatarUrl: z.string().url().max(500).nullable().optional(),
+    theme: z.enum(["light", "dark"]).optional(),
+  })
+  .strict();
+
 export const ShareBody = z
   .object({
     teamId: cuid.nullable().optional(),
