@@ -52,8 +52,8 @@ sed -i '' "s|SESSION_SECRET=.*|SESSION_SECRET=\"$(openssl rand -base64 48)\"|" .
 docker compose up -d
 
 # 4. Visit http://localhost:3000 and log in
-#    email:    admin@tessera.app
-#    password: (printed to stdout when `npm run seed` finishes)
+#    email:    admin
+#    password: admin123
 #
 #    The seed generates random passwords and sets mustChangePassword=true,
 #    so the accounts must set a real password on first login. Save the
