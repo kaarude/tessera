@@ -9,6 +9,8 @@ import {
   Check,
   ChevronDown,
   Plus,
+  Sun,
+  Moon,
 } from "lucide-react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
@@ -233,10 +235,43 @@ export function TopBar({ user }: { user: any }) {
           )}
         </div>
 
+        {/* Theme toggle — non-admins only */}
+        {!user?.isAdmin && (
+          <button
+            onClick={async () => {
+              const next = user?.theme === "light" ? "dark" : "light";
+              const res = await fetch("/api/users/me", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ theme: next }),
+              });
+              if (res.ok) {
+                queryClient.invalidateQueries({ queryKey: ["me"] });
+              }
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={
+              user?.theme === "light"
+                ? "Switch to dark mode"
+                : "Switch to light mode"
+            }
+          >
+            {user?.theme === "light" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        )}
+
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
-            {user?.name?.charAt(0).toUpperCase() || "U"}
-          </div>
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user?.name || "User"}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+              {user?.name?.charAt(0).toUpperCase() || "U"}
+            </div>
+          )}
           <span className="hidden text-sm font-medium text-foreground md:block">
             {user?.name}
           </span>

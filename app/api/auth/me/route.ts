@@ -27,6 +27,7 @@ export async function GET() {
       name: true,
       isAdmin: true,
       avatarUrl: true,
+      theme: true,
       mustChangePassword: true,
       mfaEnabled: true,
       memberships: {

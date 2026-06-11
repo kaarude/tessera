@@ -8,6 +8,7 @@ export type Me = {
   name: string;
   isAdmin: boolean;
   avatarUrl?: string | null;
+  theme?: string | null;
   mustChangePassword?: boolean;
   mfaEnabled?: boolean;
   memberships: { team: { id: string; name: string } }[];

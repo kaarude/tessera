@@ -42,6 +42,12 @@ export const POST = withRoute(async ({ user, body }) => {
 
   const parsed = UserCreateBody.safeParse(body);
   if (!parsed.success) {
+    const passwordTooShort = parsed.error.issues.some(
+      (issue) => issue.path[0] === "password" && issue.code === "too_small",
+    );
+    if (passwordTooShort) {
+      return apiError(400, "Password must be at least 8 characters");
+    }
     return apiError(400, "Invalid request", { details: parsed.error.issues });
   }
   const {

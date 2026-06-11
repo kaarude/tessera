@@ -1,9 +1,23 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
+import { useAppStore } from "@/lib/store";
+
+function ThemeSync() {
+  const { theme, setTheme } = useTheme();
+  const storeTheme = useAppStore((s) => s.theme);
+
+  useEffect(() => {
+    if (storeTheme !== "system" && theme !== storeTheme) {
+      setTheme(storeTheme);
+    }
+  }, [storeTheme, theme, setTheme]);
+
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,6 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <ThemeSync />
       <QueryClientProvider client={queryClient}>
         {children}
         <Toaster
