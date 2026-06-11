@@ -6,6 +6,7 @@ import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
 import type { Prisma } from "@prisma/client";
 import { TaskCreateBody } from "@/lib/schemas";
+import { recurrenceDates } from "@/lib/recurrence";
 
 const TaskListQuery = z.object({
   teamId: z.string().cuid().optional(),
@@ -63,46 +64,52 @@ export async function GET(request: Request) {
   }
 }
 
-export const POST = withRoute(
-  async ({ user, body }) => {
-    const parsed = TaskCreateBody.safeParse(body);
-    if (!parsed.success) {
-      return apiError(400, "Invalid request", { details: parsed.error.issues });
-    }
-    const {
-      title,
-      description,
-      priority,
-      dueDate,
-      assigneeId,
-      teamId,
-      boardId,
-      columnId,
-      position,
-    } = parsed.data;
+export const POST = withRoute(async ({ user, body }) => {
+  const parsed = TaskCreateBody.safeParse(body);
+  if (!parsed.success) {
+    return apiError(400, "Invalid request", { details: parsed.error.issues });
+  }
+  const {
+    title,
+    description,
+    priority,
+    dueDate,
+    assigneeId,
+    teamId,
+    boardId,
+    columnId,
+    position,
+    recurrenceRule,
+    recurrenceEnd,
+  } = parsed.data;
 
-    if (!user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
-      return apiError(403, "Not a member of that team");
-    }
-    const allowed = await hasPermission(user.id, "tasks:create", teamId);
-    if (!allowed) return apiError(403, "Forbidden: tasks:create required");
+  if (!user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
+    return apiError(403, "Not a member of that team");
+  }
+  const allowed = await hasPermission(user.id, "tasks:create", teamId);
+  if (!allowed) return apiError(403, "Forbidden: tasks:create required");
 
-    // Confirm the column belongs to the board belongs to the team.
-    const column = await prisma.taskColumn.findUnique({
-      where: { id: columnId },
-      include: { board: { select: { id: true, teamId: true } } },
+  // Confirm the column belongs to the board belongs to the team.
+  const column = await prisma.taskColumn.findUnique({
+    where: { id: columnId },
+    include: { board: { select: { id: true, teamId: true } } },
+  });
+  if (
+    !column ||
+    column.board.id !== boardId ||
+    column.board.teamId !== teamId
+  ) {
+    return apiError(400, "column/board/team mismatch");
+  }
+  if (assigneeId) {
+    const membership = await prisma.teamMembership.findUnique({
+      where: { userId_teamId: { userId: assigneeId, teamId } },
     });
-    if (!column || column.board.id !== boardId || column.board.teamId !== teamId) {
-      return apiError(400, "column/board/team mismatch");
-    }
-    if (assigneeId) {
-      const membership = await prisma.teamMembership.findUnique({
-        where: { userId_teamId: { userId: assigneeId, teamId } },
-      });
-      if (!membership) return apiError(400, "assignee is not a team member");
-    }
+    if (!membership) return apiError(400, "assignee is not a team member");
+  }
 
-    const task = await prisma.task.create({
+  const task = await prisma.$transaction(async (tx) => {
+    const parent = await tx.task.create({
       data: {
         title,
         description,
@@ -114,18 +121,43 @@ export const POST = withRoute(
         columnId,
         position,
         createdById: user.id,
+        recurrenceRule: recurrenceRule ?? null,
+        recurrenceEnd: recurrenceEnd ? new Date(recurrenceEnd) : null,
       },
     });
+    const dates = recurrenceDates(
+      dueDate ? new Date(dueDate) : new Date(),
+      recurrenceRule,
+      recurrenceEnd ? new Date(recurrenceEnd) : null,
+    );
+    if (dates.length) {
+      await tx.task.createMany({
+        data: dates.map((date) => ({
+          title,
+          description,
+          priority,
+          dueDate: date,
+          assigneeId: assigneeId ?? null,
+          teamId,
+          boardId,
+          columnId,
+          position,
+          createdById: user.id,
+          recurrenceParentId: parent.id,
+        })),
+      });
+    }
+    return parent;
+  });
 
-    await logAudit({
-      actorId: user.id,
-      action: "create",
-      entityType: "task",
-      entityId: task.id,
-      teamId,
-      metadata: { title, columnId },
-    });
+  await logAudit({
+    actorId: user.id,
+    action: "create",
+    entityType: "task",
+    entityId: task.id,
+    teamId,
+    metadata: { title, columnId },
+  });
 
-    return NextResponse.json(task, { status: 201 });
-  },
-);
+  return NextResponse.json(task, { status: 201 });
+});

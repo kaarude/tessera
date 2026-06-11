@@ -28,7 +28,10 @@ async function parse<T>(res: Response): Promise<T> {
     }
   }
   if (!res.ok) {
-    const obj = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+    const obj =
+      data && typeof data === "object"
+        ? (data as Record<string, unknown>)
+        : null;
     const errField = obj?.error;
     const message =
       (typeof errField === "string" && errField) ||
@@ -65,4 +68,5 @@ export const apiPatch = <T = unknown>(url: string, body?: unknown) =>
   apiSend<T>("PATCH", url, body);
 export const apiPut = <T = unknown>(url: string, body?: unknown) =>
   apiSend<T>("PUT", url, body);
-export const apiDelete = <T = unknown>(url: string) => apiSend<T>("DELETE", url);
+export const apiDelete = <T = unknown>(url: string) =>
+  apiSend<T>("DELETE", url);

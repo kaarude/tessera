@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withRoute, mapError, logAudit, requireAuth } from "@/lib/route";
 import { apiError } from "@/lib/api-error";
 import { hasPermission } from "@/lib/permissions-server";
+import { assertTrustedOrigin } from "@/lib/security";
 import { ShareBody } from "@/lib/schemas";
 
 const CUID = /^c[a-z0-9]{20,}$/;
@@ -65,13 +66,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    assertTrustedOrigin(request);
     const { id: noteId } = await params;
     if (!CUID.test(noteId)) return apiError(400, "Invalid note id");
 
     const user = await requireAuth();
     const { searchParams } = new URL(request.url);
     const shareId = searchParams.get("shareId");
-    if (!shareId || !CUID.test(shareId)) return apiError(400, "shareId required");
+    if (!shareId || !CUID.test(shareId))
+      return apiError(400, "shareId required");
 
     const share = await prisma.noteShare.findUnique({
       where: { id: shareId },

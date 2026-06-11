@@ -43,6 +43,8 @@ export default function CalendarPage({
     startDate: "",
     endDate: "",
     isAllDay: false,
+    recurrenceRule: "",
+    recurrenceEnd: "",
   });
 
   const { data: events } = useQuery({
@@ -488,6 +490,47 @@ export default function CalendarPage({
                     All day
                   </label>
                 </div>
+                {!selectedEvent && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Repeat
+                      </label>
+                      <select
+                        value={newEvent.recurrenceRule}
+                        onChange={(event) =>
+                          setNewEvent({
+                            ...newEvent,
+                            recurrenceRule: event.target.value,
+                          })
+                        }
+                        className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none"
+                      >
+                        <option value="">Does not repeat</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Repeat until
+                      </label>
+                      <input
+                        type="date"
+                        value={newEvent.recurrenceEnd}
+                        onChange={(event) =>
+                          setNewEvent({
+                            ...newEvent,
+                            recurrenceEnd: event.target.value,
+                          })
+                        }
+                        disabled={!newEvent.recurrenceRule}
+                        className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   {selectedEvent ? (
                     <>
@@ -538,6 +581,12 @@ export default function CalendarPage({
                           startDate: startIso,
                           endDate: endIso || null,
                           teamId: currentTeamId,
+                          recurrenceRule: newEvent.recurrenceRule || null,
+                          recurrenceEnd: newEvent.recurrenceEnd
+                            ? new Date(
+                                `${newEvent.recurrenceEnd}T23:59:59`,
+                              ).toISOString()
+                            : null,
                         });
                       }}
                       disabled={

@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
-import { requireAuth, requireAdmin, hashPassword, verifyPassword, type SessionUser } from "./auth";
+import {
+  authenticateApiToken,
+  requireAuth,
+  requireAdmin,
+  hashPassword,
+  verifyPassword,
+  type SessionUser,
+} from "./auth";
 import { requirePermission } from "./permissions-server";
 import { apiError } from "./api-error";
 import { logAudit } from "./audit";
+import { assertTrustedOrigin } from "./security";
 
 export type { SessionUser };
 
@@ -29,7 +37,28 @@ export function withRoute<Params = Record<string, string>>(
 ) {
   return async (request: Request, ctx?: { params: Promise<Params> }) => {
     try {
-      const user = options?.adminOnly ? await requireAdmin() : await requireAuth();
+      assertTrustedOrigin(request);
+      const tokenAuth = request.headers
+        .get("authorization")
+        ?.startsWith("Bearer ")
+        ? await authenticateApiToken(request)
+        : null;
+      const user = tokenAuth
+        ? tokenAuth.user
+        : options?.adminOnly
+          ? await requireAdmin()
+          : await requireAuth();
+      if (options?.adminOnly && !user.isAdmin) {
+        throw new Error("Forbidden: Admin required");
+      }
+      if (
+        tokenAuth &&
+        options?.permission &&
+        !tokenAuth.scopes.has(options.permission) &&
+        !tokenAuth.scopes.has("*")
+      ) {
+        throw new Error(`Forbidden: Token lacks ${options.permission}`);
+      }
 
       let body: unknown = {};
       if (request.method !== "GET" && request.method !== "HEAD") {
@@ -48,7 +77,9 @@ export function withRoute<Params = Record<string, string>>(
         await requirePermission(user.id, options.permission, teamId);
       }
 
-      const params = (ctx?.params ? await ctx.params : ({} as Params)) as Params;
+      const params = (
+        ctx?.params ? await ctx.params : ({} as Params)
+      ) as Params;
       return await handler({ user, request, body, teamId, params });
     } catch (err) {
       return mapError(err);
@@ -57,14 +88,18 @@ export function withRoute<Params = Record<string, string>>(
 }
 
 export function mapError(err: unknown) {
-  const msg =
-    err instanceof Error ? err.message : "Internal server error";
+  const msg = err instanceof Error ? err.message : "Internal server error";
   if (msg === "Unauthorized") return apiError(401, "Unauthorized");
   if (msg === "Password change required") {
     return apiError(403, "Password change required");
   }
   if (msg.startsWith("Forbidden")) return apiError(403, msg);
-  if (err && typeof err === "object" && "name" in err && (err as { name: unknown }).name === "ZodError") {
+  if (
+    err &&
+    typeof err === "object" &&
+    "name" in err &&
+    (err as { name: unknown }).name === "ZodError"
+  ) {
     return apiError(400, "Invalid request", {
       details: (err as unknown as { issues: unknown }).issues,
     });
@@ -76,4 +111,11 @@ export function mapError(err: unknown) {
 }
 
 // Re-exports for handler convenience
-export { requireAuth, requireAdmin, hashPassword, verifyPassword, logAudit, requirePermission };
+export {
+  requireAuth,
+  requireAdmin,
+  hashPassword,
+  verifyPassword,
+  logAudit,
+  requirePermission,
+};

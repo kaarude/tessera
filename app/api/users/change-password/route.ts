@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSession, hashPassword, requireAuth } from "@/lib/auth";
+import { assertTrustedOrigin } from "@/lib/security";
 import { logAudit } from "@/lib/audit";
 import { verifyPassword } from "@/lib/auth";
 import { requiresCurrentPassword } from "@/lib/access";
@@ -17,6 +18,7 @@ const Body = z
 
 export async function POST(request: Request) {
   try {
+    assertTrustedOrigin(request);
     const session = await getSession();
     const body = Body.parse(await request.json());
 
@@ -45,15 +47,24 @@ export async function POST(request: Request) {
       if (needsCurrent && !body.currentPassword) {
         return NextResponse.json(
           { error: "currentPassword is required to change your own password" },
-          { status: 400 }
+          { status: 400 },
         );
       }
       if (body.currentPassword) {
-        const target = await prisma.user.findUnique({ where: { id: body.userId } });
-        if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
-        const ok = await verifyPassword(body.currentPassword, target.passwordHash);
+        const target = await prisma.user.findUnique({
+          where: { id: body.userId },
+        });
+        if (!target)
+          return NextResponse.json({ error: "Not found" }, { status: 404 });
+        const ok = await verifyPassword(
+          body.currentPassword,
+          target.passwordHash,
+        );
         if (!ok) {
-          return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
+          return NextResponse.json(
+            { error: "Current password is incorrect" },
+            { status: 401 },
+          );
         }
       }
       const passwordHash = await hashPassword(body.newPassword);
@@ -87,14 +98,17 @@ export async function POST(request: Request) {
     if (!body.currentPassword) {
       return NextResponse.json(
         { error: "currentPassword is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const me = await prisma.user.findUnique({ where: { id: session.userId } });
     if (!me) return NextResponse.json({ error: "Not found" }, { status: 404 });
     const ok = await verifyPassword(body.currentPassword, me.passwordHash);
     if (!ok) {
-      return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Current password is incorrect" },
+        { status: 401 },
+      );
     }
     const passwordHash = await hashPassword(body.newPassword);
     const updated = await prisma.user.update({
@@ -118,13 +132,19 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error && typeof error === "object" && "issues" in error) {
       return NextResponse.json(
-        { error: "Invalid request", issues: (error as { issues: unknown }).issues },
+        {
+          error: "Invalid request",
+          issues: (error as { issues: unknown }).issues,
+        },
         { status: 400 },
       );
     }
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

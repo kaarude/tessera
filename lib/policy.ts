@@ -31,7 +31,9 @@ export function toPolicyUser(
   // roles in that team count. If no team is in scope, fall back to the
   // union of all role permissions.
   const teamRoles = teamId
-    ? user.userRoles.filter((ur) => (ur.role as { teamId?: string | null }).teamId === teamId)
+    ? user.userRoles.filter(
+        (ur) => (ur.role as { teamId?: string | null }).teamId === teamId,
+      )
     : user.userRoles;
   const permissions = new Set<string>();
   for (const ur of teamRoles) {
@@ -52,7 +54,10 @@ export function toPolicyUser(
 }
 
 /** Returns true if the user is admin or has the named permission. */
-export function hasPolicyPermission(user: PolicyUser, permission: string): boolean {
+export function hasPolicyPermission(
+  user: PolicyUser,
+  permission: string,
+): boolean {
   return user.isAdmin || user.permissions.has(permission);
 }
 

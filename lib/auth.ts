@@ -2,6 +2,7 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { randomToken, sha256 } from "./security";
 
 // Refuse to boot with a weak SESSION_SECRET. Skipped during `next build`
 // (which runs the route module to collect page data but has no real
@@ -65,6 +66,7 @@ export interface SessionData {
   isAdmin?: boolean;
   sessionVersion?: number;
   passwordChangeOnly?: boolean;
+  sessionId?: string;
 }
 
 export async function getSession() {
@@ -92,6 +94,21 @@ export async function requireAuth(options?: {
     throw new Error("Unauthorized");
   }
   await reconcileSessionVersion(session, user.sessionVersion);
+  if (session.sessionId) {
+    const tracked = await prisma.userSession.findUnique({
+      where: { sessionId: session.sessionId },
+    });
+    if (!tracked || tracked.revokedAt || tracked.expiresAt <= new Date()) {
+      session.destroy();
+      throw new Error("Unauthorized");
+    }
+    if (Date.now() - tracked.lastSeenAt.getTime() > 5 * 60 * 1000) {
+      await prisma.userSession.update({
+        where: { id: tracked.id },
+        data: { lastSeenAt: new Date() },
+      });
+    }
+  }
   if (
     (session.passwordChangeOnly || user.mustChangePassword) &&
     !options?.allowPasswordChangeOnly
@@ -99,6 +116,45 @@ export async function requireAuth(options?: {
     throw new Error("Password change required");
   }
   return user;
+}
+
+export async function createTrackedSession(userId: string, request: Request) {
+  const sessionId = randomToken("ses");
+  await prisma.userSession.create({
+    data: {
+      userId,
+      sessionId,
+      ipAddress:
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
+      userAgent: request.headers.get("user-agent")?.slice(0, 500) || null,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+  return sessionId;
+}
+
+export async function authenticateApiToken(request: Request) {
+  const authorization = request.headers.get("authorization");
+  if (!authorization?.startsWith("Bearer ")) return null;
+  const raw = authorization.slice(7);
+  const token = await prisma.apiToken.findUnique({
+    where: { tokenHash: sha256(raw) },
+    include: { user: true },
+  });
+  if (
+    !token ||
+    token.revokedAt ||
+    (token.expiresAt && token.expiresAt <= new Date())
+  ) {
+    throw new Error("Unauthorized");
+  }
+  await prisma.apiToken.update({
+    where: { id: token.id },
+    data: { lastUsedAt: new Date() },
+  });
+  const user = await loadSessionUser(token.userId);
+  if (!user) throw new Error("Unauthorized");
+  return { user, scopes: new Set(token.scopes), tokenId: token.id };
 }
 
 /**
@@ -115,7 +171,11 @@ export async function requireAuth(options?: {
  * Extracted so the logic can be unit-tested without iron-session.
  */
 export async function reconcileSessionVersion(
-  session: { sessionVersion?: number; destroy: () => void; save?: () => Promise<void> },
+  session: {
+    sessionVersion?: number;
+    destroy: () => void;
+    save?: () => Promise<void>;
+  },
   userSessionVersion: number,
 ): Promise<void> {
   if (session.sessionVersion === undefined) {

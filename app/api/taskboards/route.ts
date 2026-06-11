@@ -23,6 +23,7 @@ const BoardCreateBody = z.object({
       { name: "Review", position: 2 },
       { name: "Done", position: 3 },
     ]),
+  templateId: z.string().cuid().optional(),
 });
 
 export async function GET(request: Request) {
@@ -51,28 +52,40 @@ export async function GET(request: Request) {
   }
 }
 
-export const POST = withRoute(
-  async ({ user, body }) => {
-    const parsed = BoardCreateBody.safeParse(body);
-    if (!parsed.success) {
-      return apiError(400, "Invalid request", { details: parsed.error.issues });
-    }
-    const { name, teamId, columns } = parsed.data;
-
-    if (!user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
-      return apiError(403, "Not a member of that team");
-    }
-    const allowed = await hasPermission(user.id, "tasks:create", teamId);
-    if (!allowed) return apiError(403, "Forbidden: tasks:create required");
-
-    const board = await prisma.taskBoard.create({
-      data: {
-        name,
-        teamId,
-        columns: { create: columns },
-      },
-      include: { columns: { orderBy: { position: "asc" } } },
+export const POST = withRoute(async ({ user, body }) => {
+  const parsed = BoardCreateBody.safeParse(body);
+  if (!parsed.success) {
+    return apiError(400, "Invalid request", { details: parsed.error.issues });
+  }
+  const { name, teamId, templateId } = parsed.data;
+  let columns = parsed.data.columns;
+  if (templateId) {
+    const template = await prisma.taskBoardTemplate.findUnique({
+      where: { id: templateId },
     });
-    return NextResponse.json(board, { status: 201 });
-  },
-);
+    if (
+      !template ||
+      (template.teamId && template.teamId !== teamId && !user.isAdmin)
+    ) {
+      return apiError(404, "Template not found");
+    }
+    columns = template.columns as typeof columns;
+  }
+
+  if (!user.memberships.some((m) => m.teamId === teamId) && !user.isAdmin) {
+    return apiError(403, "Not a member of that team");
+  }
+  const allowed = await hasPermission(user.id, "tasks:create", teamId);
+  if (!allowed) return apiError(403, "Forbidden: tasks:create required");
+
+  const board = await prisma.taskBoard.create({
+    data: {
+      name,
+      teamId,
+      templateId: templateId ?? null,
+      columns: { create: columns },
+    },
+    include: { columns: { orderBy: { position: "asc" } } },
+  });
+  return NextResponse.json(board, { status: 201 });
+});

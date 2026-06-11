@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [otp, setOtp] = useState("");
   const [mustChange, setMustChange] = useState(false);
   const [changePassword, setChangePassword] = useState("");
   const [userId, setUserId] = useState("");
@@ -24,12 +26,13 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, otp: otp || undefined }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.mfaRequired) setMfaRequired(true);
         toast.error(data.error || "Login failed");
         return;
       }
@@ -125,6 +128,26 @@ export default function LoginPage() {
                     minLength={8}
                   />
                 </div>
+                {mfaRequired && (
+                  <div>
+                    <label
+                      htmlFor="otp"
+                      className="mb-1.5 block text-sm font-medium text-foreground"
+                    >
+                      Authentication code
+                    </label>
+                    <input
+                      id="otp"
+                      value={otp}
+                      onChange={(event) => setOtp(event.target.value)}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="6-digit code or recovery code"
+                      className="w-full rounded-lg border border-border bg-muted px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+                      required
+                    />
+                  </div>
+                )}
                 <button
                   type="submit"
                   disabled={loading}

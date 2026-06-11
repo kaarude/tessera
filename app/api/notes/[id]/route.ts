@@ -59,7 +59,11 @@ export const PATCH = withRoute<{ id: string }>(
 
     const isOwner = existing.ownerId === user.id;
     const ownPermission = isOwner
-      ? await hasPermission(user.id, "notes:edit_own", existing.teamId ?? undefined)
+      ? await hasPermission(
+          user.id,
+          "notes:edit_own",
+          existing.teamId ?? undefined,
+        )
       : false;
     if (isOwner && !ownPermission && !user.isAdmin) {
       return apiError(403, "Forbidden: notes:edit_own required");
@@ -88,7 +92,9 @@ export const PATCH = withRoute<{ id: string }>(
       data.teamId === undefined ? existing.teamId : data.teamId;
     if (
       targetTeamId &&
-      !user.memberships.some((membership) => membership.teamId === targetTeamId) &&
+      !user.memberships.some(
+        (membership) => membership.teamId === targetTeamId,
+      ) &&
       !user.isAdmin
     ) {
       return apiError(403, "Not a member of the target team");
@@ -119,34 +125,32 @@ export const PATCH = withRoute<{ id: string }>(
   },
 );
 
-export const DELETE = withRoute<{ id: string }>(
-  async ({ user, params }) => {
-    const { id } = params;
-    if (!CUID.test(id)) return apiError(400, "Invalid note id");
+export const DELETE = withRoute<{ id: string }>(async ({ user, params }) => {
+  const { id } = params;
+  if (!CUID.test(id)) return apiError(400, "Invalid note id");
 
-    const existing = await prisma.note.findUnique({ where: { id } });
-    if (!existing) return apiError(404, "Not found");
+  const existing = await prisma.note.findUnique({ where: { id } });
+  if (!existing) return apiError(404, "Not found");
 
-    const isOwner = existing.ownerId === user.id;
-    const permission = await hasPermission(
-      user.id,
-      isOwner ? "notes:delete_own" : "notes:delete_shared",
-      existing.teamId ?? undefined,
-    );
-    if (!permission && !user.isAdmin) {
-      return apiError(403, "Forbidden");
-    }
+  const isOwner = existing.ownerId === user.id;
+  const permission = await hasPermission(
+    user.id,
+    isOwner ? "notes:delete_own" : "notes:delete_shared",
+    existing.teamId ?? undefined,
+  );
+  if (!permission && !user.isAdmin) {
+    return apiError(403, "Forbidden");
+  }
 
-    await prisma.note.delete({ where: { id } });
-    await logAudit({
-      actorId: user.id,
-      action: "delete",
-      entityType: "note",
-      entityId: id,
-      teamId: existing.teamId ?? undefined,
-      metadata: { title: existing.title },
-    });
+  await prisma.note.delete({ where: { id } });
+  await logAudit({
+    actorId: user.id,
+    action: "delete",
+    entityType: "note",
+    entityId: id,
+    teamId: existing.teamId ?? undefined,
+    metadata: { title: existing.title },
+  });
 
-    return NextResponse.json({ success: true });
-  },
-);
+  return NextResponse.json({ success: true });
+});

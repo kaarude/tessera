@@ -18,9 +18,7 @@ export async function checkRateLimit(
 
   for (const key of uniqKeys) {
     const resetAt = new Date(now + windowMs);
-    const [record] = await prisma.$queryRaw<
-      { count: number; resetAt: Date }[]
-    >`
+    const [record] = await prisma.$queryRaw<{ count: number; resetAt: Date }[]>`
       INSERT INTO "LoginAttempt" ("id", "key", "count", "resetAt", "createdAt", "updatedAt")
       VALUES (
         concat('rl_', md5(${key})),
@@ -56,8 +54,6 @@ export async function checkRateLimit(
 export async function clearRateLimit(...keys: string[]) {
   for (const key of keys) {
     if (!key) continue;
-    await prisma.loginAttempt
-      .delete({ where: { key } })
-      .catch(() => undefined); // ignore not-found
+    await prisma.loginAttempt.delete({ where: { key } }).catch(() => undefined); // ignore not-found
   }
 }

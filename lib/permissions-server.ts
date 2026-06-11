@@ -11,7 +11,10 @@ export async function getUserPermissions(userId: string, teamId?: string) {
   const userRoles = await prisma.userRole.findMany({
     where: {
       userId,
-      OR: [{ role: { teamId: teamId ?? null } }, { role: { isPlatform: true } }],
+      OR: [
+        { role: { teamId: teamId ?? null } },
+        { role: { isPlatform: true } },
+      ],
     },
     include: {
       role: {
@@ -33,7 +36,7 @@ export async function getUserPermissions(userId: string, teamId?: string) {
 export async function hasPermission(
   userId: string,
   permission: string,
-  teamId?: string
+  teamId?: string,
 ) {
   const perms = await getUserPermissions(userId, teamId);
   return perms.has(permission);
@@ -42,7 +45,7 @@ export async function hasPermission(
 export async function requirePermission(
   userId: string,
   permission: string,
-  teamId?: string
+  teamId?: string,
 ) {
   const has = await hasPermission(userId, permission, teamId);
   if (!has) {

@@ -192,11 +192,15 @@ export default function TasksPage({
   const [menuTask, setMenuTask] = useState<Task | null>(null);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
   const [showCreate, setShowCreate] = useState(createRequested);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [newColumnName, setNewColumnName] = useState("");
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
     priority: "medium",
     columnId: "",
+    recurrenceRule: "",
+    recurrenceEnd: "",
   });
 
   const {
@@ -247,6 +251,11 @@ export default function TasksPage({
       return res.json();
     },
   });
+  const { data: templates = [] } = useQuery({
+    queryKey: ["taskboard-templates"],
+    queryFn: () =>
+      fetch("/api/taskboards/templates").then((response) => response.json()),
+  });
 
   const columns: Column[] = activeBoard?.columns || [];
 
@@ -259,6 +268,7 @@ export default function TasksPage({
         body: JSON.stringify({
           name: "Team taskboard",
           teamId: currentTeamId,
+          templateId: selectedTemplateId || undefined,
         }),
       });
       const data = await res.json();
@@ -389,6 +399,20 @@ export default function TasksPage({
               A taskboard provides To Do, In Progress, Review, and Done columns.
               Create it before adding the team&apos;s first task.
             </p>
+            {!!templates.length && (
+              <select
+                value={selectedTemplateId}
+                onChange={(event) => setSelectedTemplateId(event.target.value)}
+                className="mx-auto mt-4 block w-full max-w-xs rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none"
+              >
+                <option value="">Standard four-column board</option>
+                {templates.map((template: any) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               onClick={() => createBoardMutation.mutate()}
               disabled={!currentTeamId || createBoardMutation.isPending}
@@ -400,6 +424,62 @@ export default function TasksPage({
                 : currentTeamId
                   ? "Create taskboard"
                   : "Select a team first"}
+            </button>
+          </div>
+        )}
+
+        {activeBoard && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
+            <input
+              value={newColumnName}
+              onChange={(event) => setNewColumnName(event.target.value)}
+              placeholder="New column name"
+              className="min-w-44 flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none"
+            />
+            <button
+              onClick={async () => {
+                const response = await fetch(
+                  `/api/taskboards/${activeBoard.id}/columns`,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: newColumnName }),
+                  },
+                );
+                if (!response.ok) return toast.error("Could not add column");
+                setNewColumnName("");
+                queryClient.invalidateQueries({
+                  queryKey: ["boards", currentTeamId],
+                });
+              }}
+              disabled={!newColumnName.trim()}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              <Plus size={14} /> Add column
+            </button>
+            <button
+              onClick={async () => {
+                const response = await fetch("/api/taskboards/templates", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    name: `${activeBoard.name} template`,
+                    teamId: currentTeamId,
+                    columns: columns.map((column) => ({
+                      name: column.name,
+                      position: column.position,
+                    })),
+                  }),
+                });
+                if (!response.ok) return toast.error("Could not save template");
+                toast.success("Taskboard template saved");
+                queryClient.invalidateQueries({
+                  queryKey: ["taskboard-templates"],
+                });
+              }}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Save as template
             </button>
           </div>
         )}
@@ -587,6 +667,45 @@ export default function TasksPage({
                     <option value="high">High</option>
                   </select>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      Repeat
+                    </label>
+                    <select
+                      value={newTask.recurrenceRule}
+                      onChange={(event) =>
+                        setNewTask({
+                          ...newTask,
+                          recurrenceRule: event.target.value,
+                        })
+                      }
+                      className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none"
+                    >
+                      <option value="">Does not repeat</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      Repeat until
+                    </label>
+                    <input
+                      type="date"
+                      value={newTask.recurrenceEnd}
+                      onChange={(event) =>
+                        setNewTask({
+                          ...newTask,
+                          recurrenceEnd: event.target.value,
+                        })
+                      }
+                      disabled={!newTask.recurrenceRule}
+                      className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm outline-none disabled:opacity-50"
+                    />
+                  </div>
+                </div>
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() =>
@@ -595,6 +714,12 @@ export default function TasksPage({
                         teamId: currentTeamId,
                         boardId: activeBoard?.id,
                         columnId: newTask.columnId || columns[0]?.id,
+                        recurrenceRule: newTask.recurrenceRule || null,
+                        recurrenceEnd: newTask.recurrenceEnd
+                          ? new Date(
+                              `${newTask.recurrenceEnd}T23:59:59`,
+                            ).toISOString()
+                          : null,
                       })
                     }
                     disabled={

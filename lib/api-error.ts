@@ -14,9 +14,7 @@ export function apiError(
   return NextResponse.json(
     {
       error: message,
-      ...(isDev && options?.details
-        ? { details: options.details }
-        : {}),
+      ...(isDev && options?.details ? { details: options.details } : {}),
     },
     { status },
   );

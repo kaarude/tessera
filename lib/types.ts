@@ -9,6 +9,7 @@ export type Me = {
   isAdmin: boolean;
   avatarUrl?: string | null;
   mustChangePassword?: boolean;
+  mfaEnabled?: boolean;
   memberships: { team: { id: string; name: string } }[];
   userRoles: {
     role: {
