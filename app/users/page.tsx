@@ -146,17 +146,36 @@ export default function UsersPage() {
                 className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
                 required
               />
-              <input
-                type="password"
-                value={newUser.password}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, password: e.target.value })
-                }
-                placeholder="Initial password"
-                className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                required
-                minLength={8}
-              />
+              <div>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) =>
+                    setNewUser({ ...newUser, password: e.target.value })
+                  }
+                  placeholder="Initial password"
+                  className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                  required
+                  minLength={8}
+                  aria-invalid={
+                    newUser.password.length > 0 && newUser.password.length < 8
+                  }
+                  aria-describedby="new-user-password-help"
+                />
+                <p
+                  id="new-user-password-help"
+                  className={cn(
+                    "mt-1.5 text-xs",
+                    newUser.password.length > 0 && newUser.password.length < 8
+                      ? "text-destructive"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {newUser.password.length > 0 && newUser.password.length < 8
+                    ? "Password is too short. Use at least 8 characters."
+                    : "Use at least 8 characters."}
+                </p>
+              </div>
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -217,7 +236,7 @@ export default function UsersPage() {
                 disabled={
                   !newUser.name ||
                   !newUser.email ||
-                  !newUser.password ||
+                  newUser.password.length < 8 ||
                   createMutation.isPending
                 }
                 className={cn(buttonVariants(), "px-4")}

@@ -10,6 +10,7 @@ import {
   Shield,
   CheckCircle2,
   KeyRound,
+  Copy,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { toast } from "react-hot-toast";
@@ -93,6 +94,15 @@ export default function SettingsPage() {
       new Notification("Tessera", { body: "Notifications are now enabled!" });
     } else {
       toast.error("Permission denied");
+    }
+  }
+
+  async function copyMfaSecret() {
+    try {
+      await navigator.clipboard.writeText(mfaSecret);
+      toast.success("Authenticator secret copied");
+    } catch {
+      toast.error("Could not copy the authenticator secret");
     }
   }
 
@@ -275,10 +285,28 @@ export default function SettingsPage() {
             )}
             {!user?.mfaEnabled && mfaSecret && (
               <div className="mt-3 space-y-3">
-                <p className="rounded-lg bg-muted p-3 text-xs">
-                  Add this secret to your authenticator app:{" "}
-                  <code className="break-all">{mfaSecret}</code>
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-xs text-muted-foreground">
+                    Add this secret to your authenticator app
+                  </p>
+                  <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+                    <code className="min-w-0 flex-1 break-all font-mono text-xs text-foreground">
+                      {mfaSecret}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={copyMfaSecret}
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "icon" }),
+                        "shrink-0",
+                      )}
+                      aria-label="Copy authenticator secret"
+                      title="Copy secret"
+                    >
+                      <Copy size={15} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <input
                     value={mfaCode}
